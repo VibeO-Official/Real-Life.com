@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FPS GTA Cars Fix</title>
+<title>FPS GTA FULL</title>
 <style>
 body { margin:0; overflow:hidden; }
 canvas { display:block; }
@@ -15,7 +15,7 @@ canvas { display:block; }
 
 <script>
 
-// ================= SCENE (НЕ ТРОГАЮ) =================
+// ================= SCENE =================
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0xaad6ff, 40, 220);
 scene.background = new THREE.Color(0xaad6ff);
@@ -23,17 +23,22 @@ scene.background = new THREE.Color(0xaad6ff);
 // ================= CAMERA =================
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
 
-// ================= RENDER (ГРАФИКА НЕ УХУДШАЮ) =================
+// ================= RENDER + SHADOWS (ВОЗВРАЩЕНО) =================
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// ================= LIGHT =================
-const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+// ================= LIGHTS (ТЕНИ ВКЛЮЧЕНЫ) =================
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
 sun.position.set(80,140,60);
+sun.castShadow = true;
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
 scene.add(sun);
-scene.add(new THREE.AmbientLight(0xffffff,0.4));
+
+scene.add(new THREE.AmbientLight(0xffffff,0.35));
 
 // ================= GROUND =================
 const ground = new THREE.Mesh(
@@ -41,6 +46,7 @@ const ground = new THREE.Mesh(
     new THREE.MeshStandardMaterial({color:0x2fa84a, roughness:1})
 );
 ground.rotation.x=-Math.PI/2;
+ground.receiveShadow=true;
 scene.add(ground);
 
 // ================= PLAYER =================
@@ -63,8 +69,9 @@ document.addEventListener("mousemove",(e)=>{
 });
 document.body.onclick=()=>document.body.requestPointerLock();
 
-// ================= TREE =================
+// ================= TREE + DESTRUCTION =================
 const trees=[];
+
 function tree(x,z){
     const g=new THREE.Group();
 
@@ -73,21 +80,52 @@ function tree(x,z){
         new THREE.MeshStandardMaterial({color:0x6b3e1d})
     );
     trunk.position.y=1.5;
+    trunk.castShadow=true;
 
     const leaves=new THREE.Mesh(
         new THREE.SphereGeometry(2,10,10),
         new THREE.MeshStandardMaterial({color:0x1f7a2e})
     );
     leaves.position.y=3.5;
+    leaves.castShadow=true;
 
     g.add(trunk,leaves);
     g.position.set(x,0,z);
+
     scene.add(g);
     trees.push(g);
 }
 
-// ================= CAR =================
-function createCar(color,x,z,type,soundUrl){
+// ================= EXPLOSION =================
+function explosion(pos){
+    for(let i=0;i<20;i++){
+        const p=new THREE.Mesh(
+            new THREE.SphereGeometry(0.2,6,6),
+            new THREE.MeshStandardMaterial({color:0xff6600})
+        );
+        p.position.copy(pos);
+        scene.add(p);
+
+        const dir=new THREE.Vector3(
+            (Math.random()-0.5)*2,
+            Math.random()*2,
+            (Math.random()-0.5)*2
+        );
+
+        let t=0;
+        const interval=setInterval(()=>{
+            p.position.add(dir);
+            t++;
+            if(t>20){
+                scene.remove(p);
+                clearInterval(interval);
+            }
+        },30);
+    }
+}
+
+// ================= CARS =================
+function createCar(color,x,z,type){
 
     const car=new THREE.Group();
 
@@ -102,36 +140,20 @@ function createCar(color,x,z,type,soundUrl){
     body.position.y=1.2;
     car.add(body);
 
-    const glass=new THREE.Mesh(
-        new THREE.BoxGeometry(3,1,3),
-        new THREE.MeshStandardMaterial({color:0x99ccff,transparent:true,opacity:0.5})
-    );
-    glass.position.y=2;
-    car.add(glass);
-
-    // ===== колёса =====
     const wheels=[];
     function wheel(x,z){
         const w=new THREE.Mesh(
-            new THREE.CylinderGeometry(0.6,0.6,0.5,18),
+            new THREE.CylinderGeometry(0.6,0.6,0.5,16),
             new THREE.MeshStandardMaterial({color:0x111})
         );
         w.rotation.z=Math.PI/2;
         w.position.set(x,0.6,z);
+        w.castShadow=true;
         car.add(w);
         wheels.push(w);
     }
 
     wheel(2,3); wheel(-2,3); wheel(2,-3); wheel(-2,-3);
-
-    // ===== руль (визуальный) =====
-    const steeringWheel = new THREE.Mesh(
-        new THREE.TorusGeometry(0.4,0.1,10,18),
-        new THREE.MeshStandardMaterial({color:0x000000})
-    );
-    steeringWheel.position.set(0,1.5,-1.5);
-    steeringWheel.rotation.x=Math.PI/2;
-    car.add(steeringWheel);
 
     car.position.set(x,0,z);
 
@@ -140,22 +162,19 @@ function createCar(color,x,z,type,soundUrl){
         speed:0,
         yaw:0,
         wheels,
-        steeringWheel,
-        sound:new Audio(soundUrl)
+        hits:0
     };
 
-    car.userData.sound.loop=true;
-    car.userData.sound.volume=0.3;
+    car.castShadow=true;
 
     scene.add(car);
     return car;
 }
 
-// разные машины
+// ================= CARS =================
 const cars=[
-    createCar(0xff0000,20,20,"sport","https://actions.google.com/sounds/v1/transportation/car_engine_idle.ogg"),
-    createCar(0x3333ff,-30,10,"bus","https://actions.google.com/sounds/v1/transportation/bus_drive.ogg"),
-    createCar(0x00ffcc,0,-30,"sport","https://actions.google.com/sounds/v1/transportation/race_car_pass_by.ogg")
+    createCar(0xff0000,20,20,"sport"),
+    createCar(0x3333ff,-20,10,"bus")
 ];
 
 let currentCar=null;
@@ -188,19 +207,38 @@ function carCamera(car){
     camera.lookAt(car.position);
 }
 
-// ================= ENTER CAR FIX =================
-function getNearestCar(){
-    let nearest=null;
-    let dist=999;
+// ================= COLLISION + DESTRUCT =================
+function checkTrees(car){
+    for(let i=trees.length-1;i>=0;i--){
+        const t=trees[i];
 
-    for(const c of cars){
-        const d=c.position.distanceTo(player.position);
-        if(d<5 && d<dist){
-            dist=d;
-            nearest=c;
+        if(car.position.distanceTo(t.position)<4){
+
+            t.traverse(obj=>{
+                if(obj.isMesh){
+                    obj.position.x+=(Math.random()-0.5)*2;
+                    obj.position.y+=Math.random()*2;
+                    obj.position.z+=(Math.random()-0.5)*2;
+                }
+            });
+
+            scene.remove(t);
+            trees.splice(i,1);
+
+            car.userData.hits++;
+
+            if(car.userData.hits>=7){
+                explosion(car.position);
+
+                // "взрыв машины"
+                scene.remove(car);
+                currentCar=null;
+                return;
+            }
+
+            car.userData.speed*=0.5;
         }
     }
-    return nearest;
 }
 
 // ================= UPDATE =================
@@ -231,48 +269,47 @@ function update(){
     if(currentCar){
 
         const c=currentCar;
-        const u=c.userData;
 
-        u.sound.play().catch(()=>{});
+        if(keys["keyw"]) c.userData.speed += 0.01;
+        else c.userData.speed *= 0.98;
 
-        // разгон
-        if(keys["keyw"]) u.speed += 0.01;
-        else u.speed *= 0.98;
+        c.userData.speed=Math.max(0,Math.min(c.userData.speed,0.8));
 
-        u.speed=Math.max(0,Math.min(u.speed,u.type==="bus"?0.5:0.85));
+        if(keys["keys"]) c.userData.speed-=0.015;
 
-        if(keys["keys"]) u.speed-=0.015;
+        if(keys["keya"]) c.userData.yaw += 0.03*(c.userData.speed+0.2);
+        if(keys["keyd"]) c.userData.yaw -= 0.03*(c.userData.speed+0.2);
 
-        // поворот
-        if(keys["keya"]) u.yaw += 0.03*(u.speed+0.2);
-        if(keys["keyd"]) u.yaw -= 0.03*(u.speed+0.2);
+        const fx2=Math.sin(c.userData.yaw);
+        const fz2=Math.cos(c.userData.yaw);
 
-        const fx2=Math.sin(u.yaw);
-        const fz2=Math.cos(u.yaw);
+        c.position.x += fx2*c.userData.speed;
+        c.position.z += fz2*c.userData.speed;
 
-        c.position.x += fx2*u.speed;
-        c.position.z += fz2*u.speed;
+        c.rotation.y=c.userData.yaw;
 
-        c.rotation.y=u.yaw;
-
-        // колёса крутятся
-        u.wheels.forEach(w=>{
-            w.rotation.x += u.speed;
+        c.userData.wheels.forEach(w=>{
+            w.rotation.x += c.userData.speed;
         });
 
-        // руль вращается
-        u.steeringWheel.rotation.z = (keys["keya"]?-0.5:keys["keyd"]?0.5:0);
-
         player.position.copy(c.position);
-    } else {
-        cars.forEach(c=>c.userData.sound.pause());
+
+        checkTrees(c);
     }
 
-    // ================= ENTER/EXIT FIX =================
+    // ================= ENTER/EXIT =================
     if(keys["keyf"]){
         if(!currentCar){
-            const target=getNearestCar();
-            if(target) currentCar=target;
+            let nearest=null,dist=999;
+
+            for(const c of cars){
+                const d=c.position.distanceTo(player.position);
+                if(d<5 && d<dist){
+                    nearest=c;
+                    dist=d;
+                }
+            }
+            if(nearest) currentCar=nearest;
         } else {
             currentCar=null;
         }
@@ -307,14 +344,8 @@ function animate(){
 }
 animate();
 
-window.addEventListener("resize",()=>{
-    camera.aspect=innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(innerWidth,innerHeight);
-});
-
 // ================= WORLD =================
-for(let i=0;i<100;i++){
+for(let i=0;i<120;i++){
     tree(Math.random()*300-150,Math.random()*300-150);
 }
 
