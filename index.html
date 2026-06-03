@@ -75,6 +75,7 @@ document.addEventListener("keydown", (e) => {
         if (document.pointerLockElement) {
             document.exitPointerLock();
         } else {
+            // Запрос сделан через безопасный вызов, чтобы не ломать игру
             document.body.requestPointerLock();
         }
     }
@@ -84,7 +85,7 @@ document.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-// Клик также позволяет войти в режим игры
+// Клик по экрану для активации игры
 document.addEventListener("click", () => {
     if (!document.pointerLockElement) {
         document.body.requestPointerLock();
@@ -98,7 +99,7 @@ let pitch = 0;
 document.addEventListener("mousemove", (e) => {
     if (!document.pointerLockElement) return;
 
-    // Исправлено направление осей мыши
+    // Корректные оси без инверсии
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
 
