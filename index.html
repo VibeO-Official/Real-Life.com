@@ -54,19 +54,15 @@ const player = new THREE.Object3D();
 player.position.set(0, 2, 0);
 scene.add(player);
 
-// Переменные для прыжка
+// Начальное положение камеры
+camera.position.copy(player.position);
+
+// Физика прыжка
 let velocityY = 0;
-const gravity = 0.01;
-const jumpForce = 0.2;
+const gravity = 0.008;
+const jumpForce = 0.18;
 const playerHeight = 2;
 let isGrounded = true;
-
-// Клик по экрану активирует управление мышью
-document.addEventListener("click", () => {
-    if (!document.pointerLockElement) {
-        document.body.requestPointerLock();
-    }
-});
 
 // 🎮 управление
 const keys = {};
@@ -88,15 +84,21 @@ document.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
+// Клик также позволяет войти в режим игры
+document.addEventListener("click", () => {
+    if (!document.pointerLockElement) {
+        document.body.requestPointerLock();
+    }
+});
+
 // 🖱 мышь
 let yaw = 0;
 let pitch = 0;
 
 document.addEventListener("mousemove", (e) => {
-
     if (!document.pointerLockElement) return;
 
-    // Исправлено направление вращения (знаки изменены, чтобы мышь не была инвертированной)
+    // Исправлено направление осей мыши
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
 
@@ -105,12 +107,10 @@ document.addEventListener("mousemove", (e) => {
 
 // 🌳 дерево
 function tree(x, z){
-
     const trunk = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 2, 0.5),
         new THREE.MeshLambertMaterial({ color: 0x8B4513 })
     );
-
     trunk.position.set(x, 1, z);
     scene.add(trunk);
 
@@ -118,7 +118,6 @@ function tree(x, z){
         new THREE.SphereGeometry(1),
         new THREE.MeshLambertMaterial({ color: 0x00ff00 })
     );
-
     leaves.position.set(x, 3, z);
     scene.add(leaves);
 }
@@ -133,7 +132,6 @@ for(let i = 0; i < 30; i++){
 
 // 🧠 движение
 function update(){
-
     const speed = keys["shift"] ? 0.25 : 0.12;
 
     let dx = 0;
@@ -144,13 +142,12 @@ function update(){
     if(keys["a"]) dx -= 1;
     if(keys["d"]) dx += 1;
 
-    // Нормализация и расчет движения с учетом направления взгляда камеры
+    // Вычисление направления движения относительно взгляда
     if(dx !== 0 || dz !== 0){
         const len = Math.sqrt(dx * dx + dz * dz);
         dx /= len;
         dz /= len;
 
-        // Направление движения пересчитывается относительно угла yaw (куда смотрим)
         const forwardX = Math.sin(yaw);
         const forwardZ = -Math.cos(yaw);
         const rightX = Math.cos(yaw);
@@ -160,7 +157,7 @@ function update(){
         player.position.z += (forwardZ * dz + rightZ * dx) * speed;
     }
 
-    // Логика прыжка и гравитации
+    // Логика прыжка
     if (keys[" "] && isGrounded) {
         velocityY = jumpForce;
         isGrounded = false;
@@ -177,49 +174,30 @@ function update(){
         }
     }
 
-    // камера находится в позиции игрока
+    // Камера всегда следует за позицией игрока
     camera.position.copy(player.position);
 
-    // если мышь включена
-    if(document.pointerLockElement){
+    // Рассчитываем направление взгляда
+    const lookDir = new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        -Math.cos(yaw) * Math.cos(pitch)
+    );
 
-        const lookDir = new THREE.Vector3(
-            Math.sin(yaw) * Math.cos(pitch),
-            Math.sin(pitch),
-            -Math.cos(yaw) * Math.cos(pitch)
-        );
-
-        camera.lookAt(
-            player.position.clone().add(lookDir)
-        );
-
-    } else {
-
-        camera.lookAt(player.position);
-    }
+    camera.lookAt(player.position.clone().add(lookDir));
 }
 
 // 📏 изменение окна
 window.addEventListener("resize", () => {
-
-    camera.aspect =
-        window.innerWidth / window.innerHeight;
-
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // 🔁 цикл
 function animate(){
-
     requestAnimationFrame(animate);
-
     update();
-
     renderer.render(scene, camera);
 }
 
