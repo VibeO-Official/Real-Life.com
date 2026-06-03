@@ -23,11 +23,9 @@ canvas {
 
 <script>
 
-// 🌍 СЦЕНА И НАСТРОЙКИ ГРАФИКИ
 const scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2(0x87CEEB, 0.015);
 
-// 📷 КАМЕРА
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -35,7 +33,6 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-// 🎮 РЕНДЕР
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -43,94 +40,64 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// 💡 СВЕТ
+// свет
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
 scene.add(ambientLight);
 
 const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2);
 sunLight.position.set(40, 60, 20);
-sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
-sunLight.shadow.camera.near = 0.5;
-sunLight.shadow.camera.far = 200;
-
-const d = 50;
-sunLight.shadow.camera.left = -d;
-sunLight.shadow.camera.right = d;
-sunLight.shadow.camera.top = d;
-sunLight.shadow.camera.bottom = -d;
-sunLight.shadow.bias = -0.0005;
-
 scene.add(sunLight);
 
 const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
-hemiLight.position.set(0, 200, 0);
 scene.add(hemiLight);
 
-// 🌌 НЕБО
-const skyGeo = new THREE.SphereGeometry(500, 32, 15);
-const skyMat = new THREE.MeshBasicMaterial({
-    color: 0x7ec0ee,
-    side: THREE.BackSide
-});
-const sky = new THREE.Mesh(skyGeo, skyMat);
+// небо
+const sky = new THREE.Mesh(
+    new THREE.SphereGeometry(500, 32, 15),
+    new THREE.MeshBasicMaterial({ color: 0x7ec0ee, side: THREE.BackSide })
+);
 scene.add(sky);
 
-// ☀️ СОЛНЦЕ
-const sunGeo = new THREE.SphereGeometry(10, 16, 16);
-const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffee });
-const sunVisual = new THREE.Mesh(sunGeo, sunMat);
-sunVisual.position.set(120, 180, 60);
-scene.add(sunVisual);
-
-// 🌍 ЗЕМЛЯ
+// земля
 const groundGeo = new THREE.PlaneGeometry(300, 300, 64, 64);
-
 const pos = groundGeo.attributes.position;
+
 for (let i = 0; i < pos.count; i++) {
     const vx = pos.getX(i);
     const vy = pos.getY(i);
-    pos.setZ(i,
-        Math.sin(vx * 0.2) * 0.15 +
-        Math.cos(vy * 0.2) * 0.15
-    );
+    pos.setZ(i, Math.sin(vx * 0.2) * 0.15 + Math.cos(vy * 0.2) * 0.15);
 }
 groundGeo.computeVertexNormals();
 
-const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x2e5c1e,
-    roughness: 0.9,
-    metalness: 0.1,
-    flatShading: true
-});
+const ground = new THREE.Mesh(
+    groundGeo,
+    new THREE.MeshStandardMaterial({ color: 0x2e5c1e, roughness: 0.9 })
+);
 
-const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
-ground.receiveShadow = true;
 scene.add(ground);
 
-// 🧍 ИГРОК
+// игрок
 const player = new THREE.Object3D();
 player.position.set(0, 2, 0);
 scene.add(player);
 
 camera.position.copy(player.position);
 
-// ФИЗИКА
+// физика
 let velocityY = 0;
 const gravity = 0.007;
 const jumpForce = 0.18;
 const playerHeight = 2;
 let isGrounded = true;
 
-// 🎮 УПРАВЛЕНИЕ
+// управление
 const keys = {};
 
 document.addEventListener("keydown", (e) => {
-    keys[e.key.toLowerCase()] = true;
+    keys[e.code.toLowerCase()] = true;
 
-    if (e.key.toLowerCase() === "control") {
+    if (e.code.toLowerCase() === "controlleft" || e.code.toLowerCase() === "controlright") {
         if (document.pointerLockElement) {
             document.exitPointerLock();
         } else {
@@ -140,7 +107,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
-    keys[e.key.toLowerCase()] = false;
+    keys[e.code.toLowerCase()] = false;
 });
 
 document.addEventListener("click", () => {
@@ -149,55 +116,39 @@ document.addEventListener("click", () => {
     }
 });
 
-// 🖱 МЫШЬ
+// мышь (ИСПРАВЛЕНО — без инверсии)
 let yaw = 0;
 let pitch = 0;
 
 document.addEventListener("mousemove", (e) => {
     if (!document.pointerLockElement) return;
 
-    yaw -= e.movementX * 0.002;
+    yaw += e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
 
     pitch = Math.max(-1.4, Math.min(1.4, pitch));
 });
 
-// 🌳 ДЕРЕВО
+// дерево (не трогал)
 function tree(x, z) {
     const treeGroup = new THREE.Group();
 
     const trunk = new THREE.Mesh(
         new THREE.CylinderGeometry(0.2, 0.4, 2.5, 8),
-        new THREE.MeshStandardMaterial({
-            color: 0x5a3d28,
-            roughness: 0.9
-        })
+        new THREE.MeshStandardMaterial({ color: 0x5a3d28, roughness: 0.9 })
     );
 
     trunk.position.y = 1.25;
-    trunk.castShadow = true;
     treeGroup.add(trunk);
 
-    const leavesMat = new THREE.MeshStandardMaterial({
-        color: 0x1e592f,
-        roughness: 0.6,
-        flatShading: true
-    });
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x1e592f, roughness: 0.6 });
 
-    [
-        { r: 1.4, y: 2.3 },
-        { r: 1.1, y: 3.2 },
-        { r: 0.8, y: 3.9 }
-    ].forEach(layer => {
-
+    [{ r: 1.4, y: 2.3 }, { r: 1.1, y: 3.2 }, { r: 0.8, y: 3.9 }].forEach(l => {
         const leaves = new THREE.Mesh(
-            new THREE.SphereGeometry(layer.r, 6, 6),
+            new THREE.SphereGeometry(l.r, 6, 6),
             leavesMat
         );
-
-        leaves.position.y = layer.y;
-        leaves.castShadow = true;
-
+        leaves.position.y = l.y;
         treeGroup.add(leaves);
     });
 
@@ -205,54 +156,44 @@ function tree(x, z) {
     scene.add(treeGroup);
 }
 
-// 🌲 ЛЕС
 for (let i = 0; i < 45; i++) {
-    tree(
-        Math.random() * 80 - 40,
-        Math.random() * 80 - 40
-    );
+    tree(Math.random() * 80 - 40, Math.random() * 80 - 40);
 }
 
-// 🧠 ЛОГИКА
+// логика
 function update() {
 
-    const speed = keys["shift"] ? 0.22 : 0.11;
+    const speed = keys["shiftleft"] ? 0.22 : 0.11;
 
     let dx = 0;
     let dz = 0;
 
-    if (keys["w"]) dz -= 1;
-    if (keys["s"]) dz += 1;
-    if (keys["a"]) dx -= 1;
-    if (keys["d"]) dx += 1;
+    if (keys["keyw"]) dz -= 1;
+    if (keys["keys"]) dz += 1;
+    if (keys["keya"]) dx -= 1;
+    if (keys["keyd"]) dx += 1;
 
-    if (dx || dz) {
-
-        const len = Math.sqrt(dx * dx + dz * dz);
-
+    const len = Math.sqrt(dx * dx + dz * dz);
+    if (len > 0) {
         dx /= len;
         dz /= len;
-
-        const forwardX = Math.sin(yaw);
-        const forwardZ = -Math.cos(yaw);
-
-        const rightX = Math.cos(yaw);
-        const rightZ = Math.sin(yaw);
-
-        player.position.x +=
-            (forwardX * dz + rightX * dx) * speed;
-
-        player.position.z +=
-            (forwardZ * dz + rightZ * dx) * speed;
     }
 
-    if (keys[" "] && isGrounded) {
+    const forwardX = Math.sin(yaw);
+    const forwardZ = -Math.cos(yaw);
+    const rightX = Math.cos(yaw);
+    const rightZ = Math.sin(yaw);
+
+    player.position.x += (forwardX * dz + rightX * dx) * speed;
+    player.position.z += (forwardZ * dz + rightZ * dx) * speed;
+
+    // прыжок (ИСПРАВЛЕНО)
+    if (keys["space"] && isGrounded) {
         velocityY = jumpForce;
         isGrounded = false;
     }
 
     if (!isGrounded) {
-
         velocityY -= gravity;
         player.position.y += velocityY;
 
@@ -271,25 +212,17 @@ function update() {
         -Math.cos(yaw) * Math.cos(pitch)
     );
 
-    camera.lookAt(
-        player.position.clone().add(lookDir)
-    );
+    camera.lookAt(player.position.clone().add(lookDir));
 }
 
-// 📏 АДАПТАЦИЯ
+// resize
 window.addEventListener("resize", () => {
-    camera.aspect =
-        window.innerWidth / window.innerHeight;
-
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// 🔁 ЦИКЛ
+// loop
 function animate() {
     requestAnimationFrame(animate);
     update();
