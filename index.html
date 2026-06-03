@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FPS GTA LEGO DAMAGE</title>
+<title>LEGO GTA</title>
 <style>
 body { margin:0; overflow:hidden; }
 canvas { display:block; }
@@ -23,30 +23,26 @@ scene.background = new THREE.Color(0xaad6ff);
 // ================= CAMERA =================
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
 
-// ================= RENDER (ТЕНИ ВКЛЮЧЕНЫ) =================
+// ================= RENDER + SHADOWS =================
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// ================= LIGHT (УЛУЧШЕННЫЕ ТЕНИ) =================
-const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+// ================= LIGHT =================
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(80,140,60);
 sun.castShadow = true;
-sun.shadow.mapSize.width = 4096;
-sun.shadow.mapSize.height = 4096;
 scene.add(sun);
 
-scene.add(new THREE.AmbientLight(0xffffff,0.35));
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
 
 // ================= GROUND =================
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(800,800),
-    new THREE.MeshStandardMaterial({color:0x2fa84a, roughness:1})
+    new THREE.MeshStandardMaterial({color:0x2fa84a})
 );
 ground.rotation.x=-Math.PI/2;
-ground.receiveShadow=true;
 scene.add(ground);
 
 // ================= PLAYER =================
@@ -54,12 +50,12 @@ const player = new THREE.Object3D();
 player.position.y=2;
 scene.add(player);
 
-// ================= INPUT (НЕ ТРОГАЮ) =================
+// ================= INPUT =================
 const keys={};
 document.addEventListener("keydown",e=>keys[e.code.toLowerCase()]=true);
 document.addEventListener("keyup",e=>keys[e.code.toLowerCase()]=false);
 
-// ================= MOUSE (НЕ ТРОГАЮ) =================
+// ================= MOUSE =================
 let yaw=0,pitch=0;
 document.addEventListener("mousemove",(e)=>{
     if(!document.pointerLockElement) return;
@@ -69,25 +65,23 @@ document.addEventListener("mousemove",(e)=>{
 });
 document.body.onclick=()=>document.body.requestPointerLock();
 
-// ================= TREES =================
+// ================= TREE =================
 const trees=[];
 
 function tree(x,z){
     const g=new THREE.Group();
 
     const trunk=new THREE.Mesh(
-        new THREE.CylinderGeometry(0.3,0.5,3),
+        new THREE.BoxGeometry(1,3,1),
         new THREE.MeshStandardMaterial({color:0x6b3e1d})
     );
     trunk.position.y=1.5;
-    trunk.castShadow=true;
 
     const leaves=new THREE.Mesh(
-        new THREE.SphereGeometry(2,10,10),
+        new THREE.BoxGeometry(3,3,3),
         new THREE.MeshStandardMaterial({color:0x1f7a2e})
     );
-    leaves.position.y=3.5;
-    leaves.castShadow=true;
+    leaves.position.y=4;
 
     g.add(trunk,leaves);
     g.position.set(x,0,z);
@@ -96,26 +90,49 @@ function tree(x,z){
     trees.push(g);
 }
 
-// ================= CAR =================
-function createCar(color,x,z,type){
+// ================= LEGO CAR =================
+function createLegoCar(color,x,z,type){
 
     const car=new THREE.Group();
+    const bricks=[];
 
-    const body=new THREE.Mesh(
-        new THREE.BoxGeometry(type==="bus"?6:4,1.5,type==="bus"?10:7),
+    const size = type==="bus"?6:4;
+
+    // LEGO body (кубики)
+    for(let i=0;i<6;i++){
+        const brick=new THREE.Mesh(
+            new THREE.BoxGeometry(1,0.8,1),
+            new THREE.MeshStandardMaterial({
+                color,
+                roughness:0.6,
+                metalness:0.1
+            })
+        );
+
+        brick.position.set(
+            (Math.random()-0.5)*size,
+            1+(Math.random()*1),
+            (Math.random()-0.5)*size
+        );
+
+        car.add(brick);
+        bricks.push(brick);
+    }
+
+    // стекло
+    const glass=new THREE.Mesh(
+        new THREE.BoxGeometry(size*0.8,1.2,size*0.6),
         new THREE.MeshStandardMaterial({
-            color,
-            metalness:0.4,
-            roughness:0.3
+            color:0x99ccff,
+            transparent:true,
+            opacity:0.4
         })
     );
-    body.position.y=1.2;
-    body.castShadow=true;
-    car.add(body);
+    glass.position.y=2;
+    car.add(glass);
 
+    // колёса
     const wheels=[];
-    const wheelMeshes=[];
-
     function wheel(x,z){
         const w=new THREE.Mesh(
             new THREE.CylinderGeometry(0.6,0.6,0.5,16),
@@ -123,11 +140,8 @@ function createCar(color,x,z,type){
         );
         w.rotation.z=Math.PI/2;
         w.position.set(x,0.6,z);
-        w.castShadow=true;
-
         car.add(w);
         wheels.push(w);
-        wheelMeshes.push(w);
     }
 
     wheel(2,3); wheel(-2,3); wheel(2,-3); wheel(-2,-3);
@@ -135,10 +149,10 @@ function createCar(color,x,z,type){
     car.position.set(x,0,z);
 
     car.userData={
-        type,
         speed:0,
         yaw:0,
-        wheels:wheelMeshes,
+        wheels,
+        bricks,
         damage:0
     };
 
@@ -148,8 +162,8 @@ function createCar(color,x,z,type){
 
 // ================= CARS =================
 const cars=[
-    createCar(0xff0000,20,20,"sport"),
-    createCar(0x3333ff,-20,10,"bus")
+    createLegoCar(0xff0000,20,20,"sport"),
+    createLegoCar(0x3333ff,-20,10,"bus")
 ];
 
 let currentCar=null;
@@ -182,18 +196,19 @@ function carCamera(car){
     camera.lookAt(car.position);
 }
 
-// ================= LEGO DAMAGE SYSTEM =================
-function damageCar(car){
+// ================= LEGO DAMAGE =================
+function damage(car){
 
     car.userData.damage++;
 
-    car.children.forEach(part=>{
-        if(Math.random()<0.3){
-            part.position.x += (Math.random()-0.5)*1.5;
-            part.position.y += Math.random()*1.2;
-            part.position.z += (Math.random()-0.5)*1.5;
-            part.rotation.x += Math.random();
-            part.rotation.z += Math.random();
+    // ломаем кубики постепенно
+    car.userData.bricks.forEach(b=>{
+        if(Math.random()<0.4){
+            b.position.x += (Math.random()-0.5)*2;
+            b.position.y += Math.random()*1.5;
+            b.position.z += (Math.random()-0.5)*2;
+            b.rotation.x += Math.random();
+            b.rotation.z += Math.random();
         }
     });
 
@@ -250,27 +265,28 @@ function update(){
 
         c.rotation.y=c.userData.yaw;
 
-        // ================= WHEELS ROTATION =================
+        // колёса крутятся
         c.userData.wheels.forEach(w=>{
-            w.rotation.x += c.userData.speed * 2;
+            w.rotation.x += c.userData.speed*2;
         });
 
-        // damage when hitting trees
+        // столкновения с деревьями
         for(let i=trees.length-1;i>=0;i--){
             const t=trees[i];
+
             if(c.position.distanceTo(t.position)<4){
 
                 scene.remove(t);
                 trees.splice(i,1);
 
-                damageCar(c);
+                damage(c);
             }
         }
 
         player.position.copy(c.position);
     }
 
-    // ================= ENTER/EXIT =================
+    // ================= ENTER =================
     if(keys["keyf"]){
         if(!currentCar){
             let nearest=null,dist=999;
