@@ -2,19 +2,39 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>3D Игра</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next-Gen Mini Game</title>
 <style>
-body { margin: 0; overflow: hidden; }
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #0a1128;
+}
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
 </style>
 </head>
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<!-- Подключаем Three.js и модули постобработки для крутой графики (Bloom эффект) -->
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
+<script src="https://jsdelivr.net"></script>
 
 <script>
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87CEEB);
 
+// 🌍 СЦЕНА И НАСТРОЙКИ ГРАФИКИ
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x87CEEB, 0.015); // Реалистичный туман вдали
+
+// 📷 КАМЕРА
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth / window.innerHeight,
@@ -22,73 +42,281 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
-const renderer = new THREE.WebGLRenderer({antialias:true});
+// 🎮 РЕНДЕР С МАКСИМАЛЬНЫМИ НАСТРОЙКАМИ ГРАФИКИ
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Четкость для Retina/4K мониторов
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Очень мягкие, реалистичные тени
+renderer.toneMapping = THREE.ACESFilmicToneMapping; // Кинематографическая цветокоррекция
+renderer.toneMappingExposure = 1.0;
 document.body.appendChild(renderer.domElement);
 
-// Свет
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 20, 10);
-scene.add(light);
-
-// Земля
-const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(100, 100),
-    new THREE.MeshLambertMaterial({color: 0x228B22})
+// ✨ ПОСТОБРАБОТКА (ЭФФЕКТ BLOOM / СВЕЧЕНИЕ)
+const renderPass = new THREE.RenderPass(scene, camera);
+const bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.4,  // Интенсивность свечения
+    0.2,  // Радиус размытия
+    0.85  // Порог яркости
 );
+const composer = new THREE.EffectComposer(renderer);
+composer.addPass(renderPass);
+composer.addPass(bloomPass);
+
+// 💡 РЕАЛИСТИЧНЫЙ СВЕТ И ТЕНИ
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // Заполняющий свет
+scene.add(ambientLight);
+
+const sunLight = new THREE.DirectionalLight(0xfffaed, 1.2); // Солнечный свет
+sunLight.position.set(40, 60, 20);
+sunLight.castShadow = true;
+// Настройка разрешения теней на максимум
+sunLight.shadow.mapSize.width = 2048;
+sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.camera.near = 0.5;
+sunLight.shadow.camera.far = 200;
+const d = 50;
+sunLight.shadow.camera.left = -d;
+sunLight.shadow.camera.right = d;
+sunLight.shadow.camera.top = d;
+sunLight.shadow.camera.bottom = -d;
+sunLight.shadow.bias = -0.0005;
+scene.add(sunLight);
+
+// Полусферический свет для красивых градиентных теней земли и неба
+const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
+hemiLight.position.set(0, 200, 0);
+scene.add(hemiLight);
+
+// 🌌 КРУТОЕ НЕБО С СОЛНЦЕМ
+const skyGeo = new THREE.SphereGeometry(500, 32, 15);
+const skyMat = new THREE.MeshBasicMaterial({
+    color: 0x7ec0ee,
+    side: THREE.BackSide
+});
+const sky = new THREE.Mesh(skyGeo, skyMat);
+scene.add(sky);
+
+// Модель солнца на небе
+const sunGeo = new THREE.SphereGeometry(10, 16, 16);
+const sunMat = new THREE.MeshBasicMaterial({ color: 0xffffee });
+const sunVisual = new THREE.Mesh(sunGeo, sunMat);
+sunVisual.position.set(120, 180, 60);
+scene.add(sunVisual);
+
+
+// 🌍 НЕКСТ-ГЕН ЗЕМЛЯ (С НАСТОЯЩИМ РЕЛЬЕФОМ И ТЕКСТУРОЙ)
+const groundGeo = new THREE.PlaneGeometry(300, 300, 64, 64);
+// Создаем процедурный рельеф травы (шум) на вершинах
+const pos = groundGeo.attributes.position;
+for (let i = 0; i < pos.count; i++) {
+    const vx = pos.getX(i);
+    const vy = pos.getY(i);
+    // Добавляем мелкие неровности земли
+    pos.setZ(i, Math.sin(vx * 0.2) * 0.15 + Math.cos(vy * 0.2) * 0.15);
+}
+groundGeo.computeVertexNormals();
+
+const groundMat = new THREE.MeshStandardMaterial({ 
+    color: 0x2e5c1e,
+    roughness: 0.9, // Матовая трава
+    metalness: 0.1,
+    flatShading: true // Придает полигональный стильный вид земле
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
 scene.add(ground);
 
-// Игрок
-const player = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 2, 1),
-    new THREE.MeshLambertMaterial({color: 0xff0000})
-);
-player.position.y = 1;
+
+// 🧍 ИГРОК И КАМЕРА
+const player = new THREE.Object3D();
+player.position.set(0, 2, 0);
 scene.add(player);
 
-// Камера
-camera.position.set(0, 5, 8);
-camera.lookAt(player.position);
+camera.position.copy(player.position);
 
-// Управление
+// ФИЗИКА ПРЫЖКА И ПЕРЕМЕЩЕНИЯ
+let velocityY = 0;
+const gravity = 0.007;
+const jumpForce = 0.18;
+const playerHeight = 2;
+let isGrounded = true;
+
+// 🎮 УПРАВЛЕНИЕ И БЛОКИРОВКА МЫШИ (CTRL)
 const keys = {};
 
-document.addEventListener("keydown", e => {
+document.addEventListener("keydown", (e) => {
     keys[e.key.toLowerCase()] = true;
+
+    // Кнопка CTRL: включает и выключает мышь без вылетов игры
+    if (e.key === "Control") {
+        if (document.pointerLockElement) {
+            document.exitPointerLock();
+        } else {
+            document.body.requestPointerLock();
+        }
+    }
 });
 
-document.addEventListener("keyup", e => {
+document.addEventListener("keyup", (e) => {
     keys[e.key.toLowerCase()] = false;
 });
 
-function update() {
-    const speed = 0.1;
+// Клик по экрану для захвата управления курсором
+document.addEventListener("click", () => {
+    if (!document.pointerLockElement) {
+        document.body.requestPointerLock();
+    }
+});
 
-    if (keys["w"]) player.position.z -= speed;
-    if (keys["s"]) player.position.z += speed;
-    if (keys["a"]) player.position.x -= speed;
-    if (keys["d"]) player.position.x += speed;
 
-    camera.position.x = player.position.x;
-    camera.position.z = player.position.z + 8;
-    camera.lookAt(player.position);
+// 🖱 ПРАВИЛЬНОЕ ВРАЩЕНИЕ МЫШИ (БЕЗ ИНВЕРСИИ)
+let yaw = 0;
+let pitch = 0;
+
+document.addEventListener("mousemove", (e) => {
+    if (!document.pointerLockElement) return;
+
+    // Движение мыши точно совпадает с направлением головы игрока
+    yaw -= e.movementX * 0.002;
+    pitch -= e.movementY * 0.002;
+
+    // Ограничение взгляда вверх и вниз
+    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+});
+
+
+// 🌳 КРУТЫЕ ВЫСОКОДЕТАЛИЗИРОВАННЫЕ ДЕРЕВЬЯ С ТЕНЯМИ
+function tree(x, z){
+    const treeGroup = new THREE.Group();
+
+    // Ствол дерева (PBR материал)
+    const trunkGeo = new THREE.CylinderGeometry(0.2, 0.4, 2.5, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ 
+        color: 0x5a3d28, 
+        roughness: 0.9 
+    });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = 1.25;
+    trunk.castShadow = true;
+    trunk.receiveShadow = true;
+    treeGroup.add(trunk);
+
+    // Пышная листва из нескольких слоев сфер для объема
+    const leavesMat = new THREE.MeshStandardMaterial({ 
+        color: 0x1e592f, 
+        roughness: 0.6,
+        flatShading: true
+    });
+
+    const layers = [
+        { r: 1.4, y: 2.3 },
+        { r: 1.1, y: 3.2 },
+        { r: 0.8, y: 3.9 }
+    ];
+
+    layers.forEach(layer => {
+        const leaves = new THREE.Mesh(new THREE.SphereGeometry(layer.r, 6, 6), leavesMat);
+        leaves.position.y = layer.y;
+        leaves.castShadow = true;
+        leaves.receiveShadow = true;
+        treeGroup.add(leaves);
+    });
+
+    treeGroup.position.set(x, 0, z);
+    scene.add(treeGroup);
 }
 
-function animate() {
-    requestAnimationFrame(animate);
-    update();
-    renderer.render(scene, camera);
+// 🌲 ГЕНЕРАЦИЯ ЛЕСА
+for(let i = 0; i < 45; i++){
+    tree(
+        (Math.random() * 80) - 40,
+        (Math.random() * 80) - 40
+    );
 }
 
-animate();
 
+// 🧠 ИДЕАЛЬНАЯ ЛОГИКА ДВИЖЕНИЯ И ФИЗИКИ
+function update(){
+    const speed = keys["shift"] ? 0.22 : 0.11;
+
+    let dx = 0;
+    let dz = 0;
+
+    // WASD Управление
+    if(keys["w"]) dz -= 1;
+    if(keys["s"]) dz += 1;
+    if(keys["a"]) dx -= 1;
+    if(keys["d"]) dx += 1;
+
+    // Рассчитываем вектор движения ОТНОСИТЕЛЬНО направления камеры (yaw)
+    if(dx !== 0 || dz !== 0){
+        const len = Math.sqrt(dx * dx + dz * dz);
+        dx /= len;
+        dz /= len;
+
+        // Направление вперед-назад и влево-вправо на основе угла мыши
+        const forwardX = Math.sin(yaw);
+        const forwardZ = -Math.cos(yaw);
+        const rightX = Math.cos(yaw);
+        const rightZ = Math.sin(yaw);
+
+        player.position.x += (forwardX * dz + rightX * dx) * speed;
+        player.position.z += (forwardZ * dz + rightZ * dx) * speed;
+    }
+
+    // ЛОГИКА ПРЫЖКА С ГРАВИТАЦИЕЙ (Пробел)
+    if (keys[" "] && isGrounded) {
+        velocityY = jumpForce;
+        isGrounded = false;
+    }
+
+    if (!isGrounded) {
+        velocityY -= gravity;
+        player.position.y += velocityY;
+
+        // Фиксация на уровне земли
+        if (player.position.y <= playerHeight) {
+            player.position.y = playerHeight;
+            velocityY = 0;
+            isGrounded = true;
+        }
+    }
+
+    // Привязываем камеру к голове игрока
+    camera.position.copy(player.position);
+
+    // Вычисляем точку направления взгляда
+    const lookDir = new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        -Math.cos(yaw) * Math.cos(pitch)
+    );
+
+    camera.lookAt(player.position.clone().add(lookDir));
+}
+
+
+// 📏 АДАПТИВНОСТЬ ПОД ЭКРАН
 window.addEventListener("resize", () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
 });
-</script>
 
+
+// 🔁 ИГРОВОЙ ЦИКЛ (РЕНДЕР С ПОСТОБРАБОТКОЙ)
+function animate(){
+    requestAnimationFrame(animate);
+    update();
+    composer.render(); // Рендерим сцену через Bloom-композер для сочной графики
+}
+
+animate();
+
+</script>
 </body>
 </html>
