@@ -16,7 +16,7 @@ canvas {
 </head>
 <body>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://jsdelivr.net"></script>
 
 <script>
 
@@ -51,14 +51,14 @@ scene.add(ground);
 
 // 🧍 игрок
 const player = new THREE.Object3D();
-player.position.set(0, 2, 0); // Начальная высота игрока над землей
+player.position.set(0, 2, 0);
 scene.add(player);
 
-// Переменные для прыжка и физики
+// Переменные для прыжка
 let velocityY = 0;
 const gravity = 0.01;
 const jumpForce = 0.2;
-const playerHeight = 2; // Высота глаз/камеры над землей
+const playerHeight = 2;
 let isGrounded = true;
 
 // Клик по экрану активирует управление мышью
@@ -93,8 +93,10 @@ let yaw = 0;
 let pitch = 0;
 
 document.addEventListener("mousemove", (e) => {
+
     if (!document.pointerLockElement) return;
 
+    // Исправлено направление вращения (знаки изменены, чтобы мышь не была инвертированной)
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
 
@@ -103,6 +105,7 @@ document.addEventListener("mousemove", (e) => {
 
 // 🌳 дерево
 function tree(x, z){
+
     const trunk = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 2, 0.5),
         new THREE.MeshLambertMaterial({ color: 0x8B4513 })
@@ -130,25 +133,32 @@ for(let i = 0; i < 30; i++){
 
 // 🧠 движение
 function update(){
+
     const speed = keys["shift"] ? 0.25 : 0.12;
 
-    // Направление взгляда (только по горизонтали XZ для правильной ходьбы)
-    const moveDir = new THREE.Vector3(0, 0, 0);
+    let dx = 0;
+    let dz = 0;
 
-    if (keys["w"]) moveDir.z -= 1;
-    if (keys["s"]) moveDir.z += 1;
-    if (keys["a"]) moveDir.x -= 1;
-    if (keys["d"]) moveDir.x += 1;
+    if(keys["w"]) dz -= 1;
+    if(keys["s"]) dz += 1;
+    if(keys["a"]) dx -= 1;
+    if(keys["d"]) dx += 1;
 
-    moveDir.normalize();
+    // Нормализация и расчет движения с учетом направления взгляда камеры
+    if(dx !== 0 || dz !== 0){
+        const len = Math.sqrt(dx * dx + dz * dz);
+        dx /= len;
+        dz /= len;
 
-    // Разворот вектора движения относительно угла поворота мыши (yaw)
-    const rotatedX = moveDir.x * Math.cos(yaw) - moveDir.z * Math.sin(yaw);
-    const rotatedZ = moveDir.x * Math.sin(yaw) + moveDir.z * Math.cos(yaw);
+        // Направление движения пересчитывается относительно угла yaw (куда смотрим)
+        const forwardX = Math.sin(yaw);
+        const forwardZ = -Math.cos(yaw);
+        const rightX = Math.cos(yaw);
+        const rightZ = Math.sin(yaw);
 
-    // Применяем скорость ходьбы
-    player.position.x += rotatedX * speed;
-    player.position.z += rotatedZ * speed;
+        player.position.x += (forwardX * dz + rightX * dx) * speed;
+        player.position.z += (forwardZ * dz + rightZ * dx) * speed;
+    }
 
     // Логика прыжка и гравитации
     if (keys[" "] && isGrounded) {
@@ -156,12 +166,10 @@ function update(){
         isGrounded = false;
     }
 
-    // Применяем гравитацию, если игрок в воздухе
     if (!isGrounded) {
         velocityY -= gravity;
         player.position.y += velocityY;
 
-        // Проверка приземления на землю (Y = playerHeight)
         if (player.position.y <= playerHeight) {
             player.position.y = playerHeight;
             velocityY = 0;
@@ -169,30 +177,49 @@ function update(){
         }
     }
 
-    // Камера находится точно в позиции игрока (вид из глаз)
+    // камера находится в позиции игрока
     camera.position.copy(player.position);
 
-    // Направление взгляда камеры
-    const lookDir = new THREE.Vector3(
-        Math.sin(yaw) * Math.cos(pitch),
-        Math.sin(pitch),
-        -Math.cos(yaw) * Math.cos(pitch)
-    );
+    // если мышь включена
+    if(document.pointerLockElement){
 
-    camera.lookAt(player.position.clone().add(lookDir));
+        const lookDir = new THREE.Vector3(
+            Math.sin(yaw) * Math.cos(pitch),
+            Math.sin(pitch),
+            -Math.cos(yaw) * Math.cos(pitch)
+        );
+
+        camera.lookAt(
+            player.position.clone().add(lookDir)
+        );
+
+    } else {
+
+        camera.lookAt(player.position);
+    }
 }
 
 // 📏 изменение окна
 window.addEventListener("resize", () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
+
+    camera.aspect =
+        window.innerWidth / window.innerHeight;
+
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    renderer.setSize(
+        window.innerWidth,
+        window.innerHeight
+    );
 });
 
 // 🔁 цикл
 function animate(){
+
     requestAnimationFrame(animate);
+
     update();
+
     renderer.render(scene, camera);
 }
 
