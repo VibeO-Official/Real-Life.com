@@ -36,7 +36,6 @@ sun.position.set(80,140,60);
 sun.castShadow = true;
 sun.shadow.mapSize.width = 4096;
 sun.shadow.mapSize.height = 4096;
-sun.shadow.bias = -0.0002;
 scene.add(sun);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.4));
@@ -55,8 +54,8 @@ const player = new THREE.Object3D();
 player.position.y = 2;
 scene.add(player);
 
-// ================= INPUT =================
-const keys = {};
+// ================= INPUT (НЕ ТРОГАЮ) =================
+const keys={};
 document.addEventListener("keydown",e=>keys[e.code.toLowerCase()]=true);
 document.addEventListener("keyup",e=>keys[e.code.toLowerCase()]=false);
 
@@ -95,10 +94,9 @@ function tree(x,z){
     scene.add(g);
 }
 
-// ================= CAR (УЛУЧШЕННАЯ) =================
+// ================= CAR =================
 const car = new THREE.Group();
 
-// корпус
 const body = new THREE.Mesh(
     new THREE.BoxGeometry(4,1.5,7),
     new THREE.MeshStandardMaterial({color:0xff0000, metalness:0.3, roughness:0.4})
@@ -107,27 +105,42 @@ body.position.y=1.2;
 body.castShadow=true;
 car.add(body);
 
-// кабина (стекло)
-const cabin = new THREE.Mesh(
+// стекло
+const glass = new THREE.Mesh(
     new THREE.BoxGeometry(3,1,3),
-    new THREE.MeshStandardMaterial({color:0x88ccff, transparent:true, opacity:0.5})
+    new THREE.MeshStandardMaterial({color:0x99ccff, transparent:true, opacity:0.5})
 );
-cabin.position.set(0,2,0);
-car.add(cabin);
+glass.position.y=2;
+car.add(glass);
 
-// руль (внутри)
-const wheel = new THREE.Mesh(
-    new THREE.TorusGeometry(0.4,0.1,8,16),
+// салон
+const seat = new THREE.Mesh(
+    new THREE.BoxGeometry(1.5,0.5,1),
     new THREE.MeshStandardMaterial({color:0x222222})
 );
-wheel.position.set(0,1.6,1.2);
+seat.position.set(0,1,0.5);
+car.add(seat);
+
+const dashboard = new THREE.Mesh(
+    new THREE.BoxGeometry(3,0.5,1),
+    new THREE.MeshStandardMaterial({color:0x111111})
+);
+dashboard.position.set(0,1.2,-2.5);
+car.add(dashboard);
+
+// руль
+const wheel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.45,0.12,10,18),
+    new THREE.MeshStandardMaterial({color:0x000000})
+);
+wheel.position.set(0,1.4,-1.8);
 wheel.rotation.x=Math.PI/2;
 car.add(wheel);
 
 // колёса
 function makeWheel(x,z){
-    const w = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.6,0.6,0.4,16),
+    const w=new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6,0.6,0.5,16),
         new THREE.MeshStandardMaterial({color:0x111111})
     );
     w.rotation.z=Math.PI/2;
@@ -135,7 +148,6 @@ function makeWheel(x,z){
     w.castShadow=true;
     car.add(w);
 }
-
 makeWheel(2,3);
 makeWheel(-2,3);
 makeWheel(2,-3);
@@ -154,8 +166,9 @@ let velY=0;
 let grounded=true;
 const gravity=0.008;
 
-// ================= CAR CONTROL =================
+// ================= CAR =================
 let inCar=false;
+let steering=0;
 
 // ================= UPDATE =================
 function update(){
@@ -164,6 +177,7 @@ function update(){
 
     let dx=0,dz=0;
 
+    // FPS + CAR input (НЕ ТРОГАЮ МЫШЬ/ХОДЬБУ)
     if(keys["keyw"]) dz+=1;
     if(keys["keys"]) dz-=1;
     if(keys["keya"]) dx-=1;
@@ -177,14 +191,12 @@ function update(){
     const rx=-Math.cos(yaw);
     const rz=Math.sin(yaw);
 
-    // ================= FPS / CAR =================
     if(!inCar){
         player.position.x += (fx*dz + rx*dx)*speed;
         player.position.z += (fz*dz + rz*dx)*speed;
     } else {
         car.position.x += fx*dz*0.4;
         car.position.z += fz*dz*0.4;
-
         player.position.copy(car.position);
     }
 
@@ -205,21 +217,41 @@ function update(){
         }
     }
 
-    // ENTER / EXIT CAR
+    // enter/exit car
     if(keys["keyf"]){
         inCar=!inCar;
         player.position.copy(car.position);
     }
 
-    camera.position.copy(player.position);
+    // ===== CAR STEERING (РУЛЬ) =====
+    if(inCar){
+        if(keys["keya"]) steering += 0.05;
+        if(keys["keyd"]) steering -= 0.05;
+        steering *= 0.9;
 
-    const dir=new THREE.Vector3(
-        Math.sin(yaw)*Math.cos(pitch),
-        Math.sin(pitch),
-        Math.cos(yaw)*Math.cos(pitch)
-    );
+        wheel.rotation.z = steering;
+        car.rotation.y = steering;
+    }
 
-    camera.lookAt(player.position.clone().add(dir));
+    // CAMERA
+    if(!inCar){
+        camera.position.copy(player.position);
+
+        const dir=new THREE.Vector3(
+            Math.sin(yaw)*Math.cos(pitch),
+            Math.sin(pitch),
+            Math.cos(yaw)*Math.cos(pitch)
+        );
+
+        camera.lookAt(player.position.clone().add(dir));
+    } else {
+        camera.position.set(
+            car.position.x,
+            car.position.y + 1.4,
+            car.position.z - 1.2
+        );
+        camera.rotation.set(0,yaw,0);
+    }
 }
 
 // ================= LOOP =================
