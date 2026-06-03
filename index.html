@@ -13,9 +13,12 @@ canvas { display:block; }
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
+
+// сцена
 const scene = new THREE.Scene();
 scene.fog = new THREE.Fog(0x87CEEB, 10, 100);
 
+// камера
 const camera = new THREE.PerspectiveCamera(
     75,
     window.innerWidth/window.innerHeight,
@@ -23,6 +26,7 @@ const camera = new THREE.PerspectiveCamera(
     1000
 );
 
+// рендер
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
@@ -45,23 +49,17 @@ const player = new THREE.Object3D();
 player.position.y = 2;
 scene.add(player);
 
-// камера (как FPS)
+// камера старт
 camera.position.set(0,2,0);
 
-// управление
+// клавиши
 let keys = {};
-let velocity = new THREE.Vector3();
 
-// мышь (поворот)
+// мышь
 let yaw = 0;
 let pitch = 0;
 
-// POINTER LOCK
-document.addEventListener("click", () => {
-    document.body.requestPointerLock();
-});
-
-// Ctrl включает/выключает мышь
+// Ctrl toggle pointer lock
 document.addEventListener("keydown", (e) => {
     keys[e.key.toLowerCase()] = true;
 
@@ -74,7 +72,9 @@ document.addEventListener("keydown", (e) => {
     }
 });
 
-document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+document.addEventListener("keyup", (e) => {
+    keys[e.key.toLowerCase()] = false;
+});
 
 // мышь движение
 document.addEventListener("mousemove", (e) => {
@@ -107,24 +107,36 @@ for(let i=0;i<30;i++){
     tree((Math.random()*40)-20, (Math.random()*40)-20);
 }
 
-// движение
+// движение (СТАБИЛЬНОЕ)
 function update(){
-    const speed = keys["shift"] ? 0.2 : 0.1;
 
-    let forward = new THREE.Vector3(0,0,-1).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
-    let right = new THREE.Vector3(1,0,0).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+    const speed = keys["shift"] ? 0.15 : 0.08;
 
-    if(keys["w"]) velocity.add(forward.multiplyScalar(speed));
-    if(keys["s"]) velocity.add(forward.multiplyScalar(-speed));
-    if(keys["a"]) velocity.add(right.multiplyScalar(-speed));
-    if(keys["d"]) velocity.add(right.multiplyScalar(speed));
+    const forward = new THREE.Vector3(
+        Math.sin(yaw),
+        0,
+        Math.cos(yaw)
+    );
 
-    // замедление (убирает дрожание)
-    velocity.multiplyScalar(0.85);
+    const right = new THREE.Vector3(
+        Math.cos(yaw),
+        0,
+        -Math.sin(yaw)
+    );
 
-    player.position.add(velocity);
+    let move = new THREE.Vector3();
 
-    // камера вращение
+    if(keys["w"]) move.add(forward);
+    if(keys["s"]) move.sub(forward);
+    if(keys["a"]) move.sub(right);
+    if(keys["d"]) move.add(right);
+
+    if(move.length() > 0){
+        move.normalize();
+        move.multiplyScalar(speed);
+        player.position.add(move);
+    }
+
     camera.position.copy(player.position);
 
     const lookDir = new THREE.Vector3(
@@ -140,10 +152,11 @@ function update(){
 function animate(){
     requestAnimationFrame(animate);
     update();
-    renderer.render(scene,camera);
+    renderer.render(scene, camera);
 }
 
 animate();
+
 </script>
 
 </body>
