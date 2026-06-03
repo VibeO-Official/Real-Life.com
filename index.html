@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FPS + Car Improved</title>
+<title>FPS + Multi Cars</title>
 <style>
 body { margin:0; overflow:hidden; }
 canvas { display:block; }
@@ -27,16 +27,13 @@ const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // ================= LIGHT =================
 const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(80,140,60);
-sun.castShadow = true;
 scene.add(sun);
-
-scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
 
 // ================= GROUND =================
 const ground = new THREE.Mesh(
@@ -59,14 +56,12 @@ document.addEventListener("keyup",e=>keys[e.code.toLowerCase()]=false);
 
 // ================= MOUSE (НЕ ТРОГАЮ) =================
 let yaw=0,pitch=0;
-
 document.addEventListener("mousemove",(e)=>{
     if(!document.pointerLockElement) return;
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
     pitch=Math.max(-1.4,Math.min(1.4,pitch));
 });
-
 document.body.onclick=()=>document.body.requestPointerLock();
 
 // ================= TREE (НЕ ТРОГАЮ) =================
@@ -78,75 +73,57 @@ function tree(x,z){
         new THREE.MeshStandardMaterial({color:0x6b3e1d})
     );
     trunk.position.y=1.5;
-    trunk.castShadow=true;
 
     const leaves=new THREE.Mesh(
         new THREE.SphereGeometry(2,8,8),
         new THREE.MeshStandardMaterial({color:0x1f7a2e})
     );
     leaves.position.y=3.5;
-    leaves.castShadow=true;
 
     g.add(trunk,leaves);
     g.position.set(x,0,z);
     scene.add(g);
 }
 
-// ================= CAR =================
-const car = new THREE.Group();
+// ================= CARS =================
+function createCar(color, x,z,type){
+    const car = new THREE.Group();
 
-const body = new THREE.Mesh(
-    new THREE.BoxGeometry(4,1.5,7),
-    new THREE.MeshStandardMaterial({color:0xff0000})
-);
-body.position.y=1.2;
-car.add(body);
-
-const glass = new THREE.Mesh(
-    new THREE.BoxGeometry(3,1,3),
-    new THREE.MeshStandardMaterial({color:0x99ccff,transparent:true,opacity:0.5})
-);
-glass.position.y=2;
-car.add(glass);
-
-// wheels
-const wheels = [];
-function wheel(x,z){
-    const w=new THREE.Mesh(
-        new THREE.CylinderGeometry(0.6,0.6,0.5,16),
-        new THREE.MeshStandardMaterial({color:0x111})
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(type==="bus"?6:4,1.5,type==="bus"?10:7),
+        new THREE.MeshStandardMaterial({color})
     );
-    w.rotation.z=Math.PI/2;
-    w.position.set(x,0.6,z);
-    car.add(w);
-    wheels.push(w);
-}
-wheel(2,3); wheel(-2,3); wheel(2,-3); wheel(-2,-3);
+    body.position.y=1.2;
+    car.add(body);
 
-car.position.set(20,0,20);
-scene.add(car);
+    const glass = new THREE.Mesh(
+        new THREE.BoxGeometry(3,1,3),
+        new THREE.MeshStandardMaterial({color:0x99ccff,transparent:true,opacity:0.5})
+    );
+    glass.position.y=2;
+    car.add(glass);
 
-// ================= WORLD =================
-for(let i=0;i<80;i++){
-    tree(Math.random()*300-150,Math.random()*300-150);
+    car.userData = {
+        type,
+        speed:0,
+        yaw:0
+    };
+
+    car.position.set(x,0,z);
+    scene.add(car);
+
+    return car;
 }
+
+const cars = [
+    createCar(0xff0000, 20,20,"sport"),
+    createCar(0x3333ff, -30,10,"bus")
+];
+
+let currentCar = null;
 
 // ================= PHYSICS =================
-let velY=0;
-let grounded=true;
-const gravity=0.008;
-
-// ================= CAR =================
-let inCar=false;
-
-let carYaw = 0;
-let speed = 0;
-let steer = 0;
-
-// ✔ ЗВУК ДВИГАТЕЛЯ
-const engineSound = new Audio("https://actions.google.com/sounds/v1/transportation/car_engine_idle.ogg");
-engineSound.loop = true;
-engineSound.volume = 0.3;
+let velY=0,grounded=true;
 
 // ================= CAMERA =================
 function fpsCamera(){
@@ -161,11 +138,11 @@ function fpsCamera(){
     camera.lookAt(player.position.clone().add(dir));
 }
 
-function carCamera(){
+function carCamera(car){
     const offset = new THREE.Vector3(
-        -Math.sin(carYaw) * 7,
+        -Math.sin(car.userData.yaw)*8,
         3,
-        -Math.cos(carYaw) * 7
+        -Math.cos(car.userData.yaw)*8
     );
 
     camera.position.copy(car.position.clone().add(offset));
@@ -176,7 +153,6 @@ function carCamera(){
 function update(){
 
     let dx=0,dz=0;
-
     if(keys["keyw"]) dz+=1;
     if(keys["keys"]) dz-=1;
     if(keys["keya"]) dx-=1;
@@ -191,78 +167,72 @@ function update(){
     const rz=Math.sin(yaw);
 
     // ================= FPS =================
-    if(!inCar){
+    if(!currentCar){
         player.position.x += (fx*dz + rx*dx)*0.12;
         player.position.z += (fz*dz + rz*dx)*0.12;
     }
 
-    // ================= CAR =================
-    if(inCar){
+    // ================= CAR CONTROL =================
+    if(currentCar){
 
-        // звук
-        engineSound.play().catch(()=>{});
+        const c = currentCar;
+        const data = c.userData;
 
-        // разгон
+        let speed = data.speed;
+
         if(keys["keyw"]) speed += 0.01;
         else speed *= 0.98;
 
-        speed = Math.max(0, Math.min(speed, 0.7));
-
         if(keys["keys"]) speed -= 0.015;
 
-        // поворот
-        if(keys["keya"]) carYaw += 0.03 * (speed + 0.2);
-        if(keys["keyd"]) carYaw -= 0.03 * (speed + 0.2);
+        speed = Math.max(0, Math.min(speed, data.type==="bus"?0.5:0.8));
 
-        // движение
-        const fx2 = Math.sin(carYaw);
-        const fz2 = Math.cos(carYaw);
+        if(keys["keya"]) data.yaw += 0.03 * (speed+0.2);
+        if(keys["keyd"]) data.yaw -= 0.03 * (speed+0.2);
 
-        car.position.x += fx2 * speed;
-        car.position.z += fz2 * speed;
+        const fx2=Math.sin(data.yaw);
+        const fz2=Math.cos(data.yaw);
 
-        car.rotation.y = carYaw;
+        c.position.x += fx2*speed;
+        c.position.z += fz2*speed;
 
-        // колёса
-        steer += (keys["keya"] ? 0.1 : keys["keyd"] ? -0.1 : 0);
-        steer *= 0.8;
+        c.rotation.y = data.yaw;
+        data.speed = speed;
 
-        wheels.forEach(w=>{
-            w.rotation.y = steer;
-        });
-
-        player.position.copy(car.position);
-    } else {
-        engineSound.pause();
-        engineSound.currentTime = 0;
+        player.position.copy(c.position);
     }
 
     // jump
-    if(!inCar && keys["space"] && grounded){
+    if(!currentCar && keys["space"] && grounded){
         velY=0.18;
         grounded=false;
     }
 
-    if(!inCar && !grounded){
-        velY-=gravity;
+    if(!currentCar && !grounded){
+        velY-=0.008;
         player.position.y+=velY;
 
         if(player.position.y<=2){
             player.position.y=2;
             grounded=true;
-            velY=0;
         }
     }
 
-    // enter/exit
+    // ================= ENTER CAR =================
     if(keys["keyf"]){
-        inCar=!inCar;
-        player.position.copy(car.position);
+        if(!currentCar){
+            currentCar = cars[0]; // берём первую
+        } else {
+            currentCar = null;
+        }
     }
 
-    // CAMERA (НЕ ТРОГАЕМ FPS)
-    if(!inCar) fpsCamera();
-    else carCamera();
+    // ================= CAMERA =================
+    if(!currentCar){
+        fpsCamera();
+    } else {
+        carCamera(currentCar);
+    }
 }
 
 // ================= LOOP =================
@@ -278,6 +248,11 @@ window.addEventListener("resize",()=>{
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth,innerHeight);
 });
+
+// ================= WORLD =================
+for(let i=0;i<80;i++){
+    tree(Math.random()*300-150,Math.random()*300-150);
+}
 
 </script>
 </body>
