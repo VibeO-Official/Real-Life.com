@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FPS + Car 3rd Person</title>
+<title>FPS + Car Clean</title>
 <style>
 body { margin:0; overflow:hidden; }
 canvas { display:block; }
@@ -27,9 +27,10 @@ const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
-// ================= LIGHT =================
+// ================= LIGHT (ЛУЧШАЯ ГРАФИКА СОХРАНЕНА) =================
 const sun = new THREE.DirectionalLight(0xffffff, 1.7);
 sun.position.set(80,140,60);
 sun.castShadow = true;
@@ -42,9 +43,13 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 // ================= GROUND =================
 const ground = new THREE.Mesh(
     new THREE.PlaneGeometry(800,800),
-    new THREE.MeshStandardMaterial({color:0x2fa84a, roughness:1})
+    new THREE.MeshStandardMaterial({
+        color:0x2fa84a,
+        roughness:1
+    })
 );
 ground.rotation.x = -Math.PI/2;
+ground.receiveShadow = true;
 scene.add(ground);
 
 // ================= PLAYER =================
@@ -69,21 +74,45 @@ document.addEventListener("mousemove",(e)=>{
 
 document.body.onclick=()=>document.body.requestPointerLock();
 
+// ================= TREE (НЕ ТРОГАЮ) =================
+function tree(x,z){
+    const g=new THREE.Group();
+
+    const trunk=new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3,0.5,3),
+        new THREE.MeshStandardMaterial({color:0x6b3e1d})
+    );
+    trunk.position.y=1.5;
+    trunk.castShadow=true;
+
+    const leaves=new THREE.Mesh(
+        new THREE.SphereGeometry(2,8,8),
+        new THREE.MeshStandardMaterial({color:0x1f7a2e})
+    );
+    leaves.position.y=3.5;
+    leaves.castShadow=true;
+
+    g.add(trunk,leaves);
+    g.position.set(x,0,z);
+    scene.add(g);
+}
+
 // ================= CAR =================
 const car = new THREE.Group();
 
 // body
 const body = new THREE.Mesh(
     new THREE.BoxGeometry(4,1.5,7),
-    new THREE.MeshStandardMaterial({color:0xff0000})
+    new THREE.MeshStandardMaterial({color:0xff0000, metalness:0.3, roughness:0.4})
 );
 body.position.y=1.2;
+body.castShadow=true;
 car.add(body);
 
 // glass
 const glass = new THREE.Mesh(
     new THREE.BoxGeometry(3,1,3),
-    new THREE.MeshStandardMaterial({color:0x99ccff,transparent:true,opacity:0.5})
+    new THREE.MeshStandardMaterial({color:0x99ccff, transparent:true, opacity:0.5})
 );
 glass.position.y=2;
 car.add(glass);
@@ -96,40 +125,30 @@ function wheel(x,z){
     );
     w.rotation.z=Math.PI/2;
     w.position.set(x,0.6,z);
+    w.castShadow=true;
     car.add(w);
 }
 wheel(2,3); wheel(-2,3); wheel(2,-3); wheel(-2,-3);
-
-// ✔ SPOILER
-const spoiler = new THREE.Mesh(
-    new THREE.BoxGeometry(3,0.2,0.8),
-    new THREE.MeshStandardMaterial({color:0x222222})
-);
-spoiler.position.set(0,2.2,-3.5);
-car.add(spoiler);
 
 car.position.set(20,0,20);
 scene.add(car);
 
 // ================= WORLD =================
-for(let i=0;i<50;i++){
-    const t=new THREE.Mesh(
-        new THREE.CylinderGeometry(0.3,0.5,3),
-        new THREE.MeshStandardMaterial({color:0x6b3e1d})
-    );
-    t.position.set(Math.random()*200-100,1.5,Math.random()*200-100);
-    scene.add(t);
+for(let i=0;i<80;i++){
+    tree(Math.random()*300-150,Math.random()*300-150);
 }
 
 // ================= PHYSICS =================
-let velY=0,grounded=true;
+let velY=0;
+let grounded=true;
 const gravity=0.008;
 
 // ================= CAR =================
 let inCar=false;
-let speedBoost=0.7; // ✔ БЫСТРЕЕ МАШИНА
 
-// ================= CAMERA POSITIONS =================
+// ================= CAMERA =================
+
+// FPS (НЕ ТРОГАЮ)
 function fpsCamera(){
     camera.position.copy(player.position);
 
@@ -142,12 +161,12 @@ function fpsCamera(){
     camera.lookAt(player.position.clone().add(dir));
 }
 
+// ✔ 3RD PERSON ТОЛЬКО В МАШИНЕ
 function carCamera(){
-    // ✔ 3RD PERSON КАМЕРА (СЗАДИ СВЕРХУ)
     const offset = new THREE.Vector3(
-        -Math.sin(yaw)*6,
+        -Math.sin(yaw)*7,
         3,
-        -Math.cos(yaw)*6
+        -Math.cos(yaw)*7
     );
 
     camera.position.copy(car.position.clone().add(offset));
@@ -156,6 +175,8 @@ function carCamera(){
 
 // ================= UPDATE =================
 function update(){
+
+    const speed=keys["shiftleft"]?0.3:0.12;
 
     let dx=0,dz=0;
 
@@ -172,12 +193,13 @@ function update(){
     const rx=-Math.cos(yaw);
     const rz=Math.sin(yaw);
 
+    // FPS / CAR MOVEMENT
     if(!inCar){
-        player.position.x += (fx*dz + rx*dx)*0.12;
-        player.position.z += (fz*dz + rz*dx)*0.12;
+        player.position.x += (fx*dz + rx*dx)*speed;
+        player.position.z += (fz*dz + rz*dx)*speed;
     } else {
-        car.position.x += fx*dz*speedBoost;
-        car.position.z += fz*dz*speedBoost;
+        car.position.x += fx*dz*0.6; // ✔ немного быстрее
+        car.position.z += fz*dz*0.6;
         player.position.copy(car.position);
     }
 
@@ -198,15 +220,18 @@ function update(){
         }
     }
 
-    // enter/exit
+    // enter/exit car
     if(keys["keyf"]){
         inCar=!inCar;
         player.position.copy(car.position);
     }
 
-    // CAMERA SWITCH
-    if(!inCar) fpsCamera();
-    else carCamera();
+    // CAMERA SWITCH (НЕ ТРОГАЕТ FPS)
+    if(!inCar){
+        fpsCamera();
+    } else {
+        carCamera();
+    }
 }
 
 // ================= LOOP =================
