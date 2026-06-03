@@ -51,11 +51,22 @@ scene.add(ground);
 
 // 🧍 игрок
 const player = new THREE.Object3D();
-player.position.set(0, 2, 0);
+player.position.set(0, 2, 0); // Начальная высота игрока над землей
 scene.add(player);
 
-// 🎥 камера
-camera.position.set(0, 2, 5);
+// Переменные для прыжка и физики
+let velocityY = 0;
+const gravity = 0.01;
+const jumpForce = 0.2;
+const playerHeight = 2; // Высота глаз/камеры над землей
+let isGrounded = true;
+
+// Клик по экрану активирует управление мышью
+document.addEventListener("click", () => {
+    if (!document.pointerLockElement) {
+        document.body.requestPointerLock();
+    }
+});
 
 // 🎮 управление
 const keys = {};
@@ -82,7 +93,6 @@ let yaw = 0;
 let pitch = 0;
 
 document.addEventListener("mousemove", (e) => {
-
     if (!document.pointerLockElement) return;
 
     yaw -= e.movementX * 0.002;
@@ -93,7 +103,6 @@ document.addEventListener("mousemove", (e) => {
 
 // 🌳 дерево
 function tree(x, z){
-
     const trunk = new THREE.Mesh(
         new THREE.BoxGeometry(0.5, 2, 0.5),
         new THREE.MeshLambertMaterial({ color: 0x8B4513 })
@@ -121,77 +130,74 @@ for(let i = 0; i < 30; i++){
 
 // 🧠 движение
 function update(){
-
     const speed = keys["shift"] ? 0.25 : 0.12;
 
-    let dx = 0;
-    let dz = 0;
+    // Направление взгляда (только по горизонтали XZ для правильной ходьбы)
+    const moveDir = new THREE.Vector3(0, 0, 0);
 
-    if(keys["w"]) dz -= 1;
-    if(keys["s"]) dz += 1;
-    if(keys["a"]) dx -= 1;
-    if(keys["d"]) dx += 1;
+    if (keys["w"]) moveDir.z -= 1;
+    if (keys["s"]) moveDir.z += 1;
+    if (keys["a"]) moveDir.x -= 1;
+    if (keys["d"]) moveDir.x += 1;
 
-    // нормализация диагонали
-    if(dx !== 0 || dz !== 0){
+    moveDir.normalize();
 
-        const len = Math.sqrt(dx * dx + dz * dz);
+    // Разворот вектора движения относительно угла поворота мыши (yaw)
+    const rotatedX = moveDir.x * Math.cos(yaw) - moveDir.z * Math.sin(yaw);
+    const rotatedZ = moveDir.x * Math.sin(yaw) + moveDir.z * Math.cos(yaw);
 
-        dx /= len;
-        dz /= len;
+    // Применяем скорость ходьбы
+    player.position.x += rotatedX * speed;
+    player.position.z += rotatedZ * speed;
 
-        player.position.x += dx * speed;
-        player.position.z += dz * speed;
+    // Логика прыжка и гравитации
+    if (keys[" "] && isGrounded) {
+        velocityY = jumpForce;
+        isGrounded = false;
     }
 
-    // камера следует за игроком
-    camera.position.x = player.position.x;
-    camera.position.y = player.position.y;
-    camera.position.z = player.position.z + 5;
+    // Применяем гравитацию, если игрок в воздухе
+    if (!isGrounded) {
+        velocityY -= gravity;
+        player.position.y += velocityY;
 
-    // если мышь включена
-    if(document.pointerLockElement){
-
-        const lookDir = new THREE.Vector3(
-            Math.sin(yaw),
-            Math.sin(pitch),
-            -Math.cos(yaw)
-        );
-
-        camera.lookAt(
-            player.position.clone().add(lookDir)
-        );
-
-    } else {
-
-        camera.lookAt(player.position);
+        // Проверка приземления на землю (Y = playerHeight)
+        if (player.position.y <= playerHeight) {
+            player.position.y = playerHeight;
+            velocityY = 0;
+            isGrounded = true;
+        }
     }
+
+    // Камера находится точно в позиции игрока (вид из глаз)
+    camera.position.copy(player.position);
+
+    // Направление взгляда камеры
+    const lookDir = new THREE.Vector3(
+        Math.sin(yaw) * Math.cos(pitch),
+        Math.sin(pitch),
+        -Math.cos(yaw) * Math.cos(pitch)
+    );
+
+    camera.lookAt(player.position.clone().add(lookDir));
 }
 
 // 📏 изменение окна
 window.addEventListener("resize", () => {
-
-    camera.aspect =
-        window.innerWidth / window.innerHeight;
-
+    camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
-    renderer.setSize(
-        window.innerWidth,
-        window.innerHeight
-    );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
 // 🔁 цикл
 function animate(){
-
     requestAnimationFrame(animate);
-
     update();
-
     renderer.render(scene, camera);
 }
 
 animate();
 
 </script>
+</body>
+</html>
