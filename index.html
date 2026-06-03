@@ -17,7 +17,8 @@ canvas { display:block; }
 
 // ================= SCENE =================
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x87CEEB, 40, 200);
+scene.fog = new THREE.Fog(0x9bd3ff, 50, 220);
+scene.background = new THREE.Color(0x9bd3ff);
 
 // ================= CAMERA =================
 const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
@@ -30,24 +31,35 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 // ================= LIGHT =================
-const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
 sun.position.set(80,120,50);
 sun.castShadow = true;
+
+sun.shadow.mapSize.width = 4096;
+sun.shadow.mapSize.height = 4096;
+sun.shadow.bias = -0.0002;
+
 scene.add(sun);
-
 scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-
-// ================= SKY =================
-scene.background = new THREE.Color(0x87CEEB);
 
 // ================= GROUND =================
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(600,600),
-    new THREE.MeshStandardMaterial({color:0x2f8f3a})
+    new THREE.PlaneGeometry(800,800),
+    new THREE.MeshStandardMaterial({color:0x2f8f3a, roughness:1})
 );
+
 ground.rotation.x = -Math.PI/2;
 ground.receiveShadow = true;
 scene.add(ground);
+
+// ================= ROAD =================
+const road = new THREE.Mesh(
+    new THREE.PlaneGeometry(800,20),
+    new THREE.MeshStandardMaterial({color:0x333333})
+);
+road.rotation.x = -Math.PI/2;
+road.position.y = 0.01;
+scene.add(road);
 
 // ================= PLAYER =================
 const player = new THREE.Object3D();
@@ -56,25 +68,20 @@ scene.add(player);
 
 // ================= INPUT =================
 const keys = {};
-
-document.addEventListener("keydown",(e)=>{
-    keys[e.code.toLowerCase()] = true;
-});
-document.addEventListener("keyup",(e)=>{
-    keys[e.code.toLowerCase()] = false;
-});
+document.addEventListener("keydown",(e)=>keys[e.code.toLowerCase()]=true);
+document.addEventListener("keyup",(e)=>keys[e.code.toLowerCase()]=false);
 
 // ================= MOUSE =================
-let yaw = 0, pitch = 0;
+let yaw=0,pitch=0;
 
 document.addEventListener("mousemove",(e)=>{
     if(!document.pointerLockElement) return;
     yaw += e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
-    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+    pitch = Math.max(-1.4,Math.min(1.4,pitch));
 });
 
-document.body.onclick = ()=>document.body.requestPointerLock();
+document.body.onclick=()=>document.body.requestPointerLock();
 
 // ================= TREE =================
 function tree(x,z){
@@ -84,70 +91,61 @@ function tree(x,z){
         new THREE.CylinderGeometry(0.3,0.5,3),
         new THREE.MeshStandardMaterial({color:0x6b3e1d})
     );
-    trunk.position.y = 1.5;
-    trunk.castShadow = true;
+    trunk.position.y=1.5;
+    trunk.castShadow=true;
 
     const leaves = new THREE.Mesh(
         new THREE.SphereGeometry(2,8,8),
         new THREE.MeshStandardMaterial({color:0x1f7a2e})
     );
-    leaves.position.y = 3.5;
-    leaves.castShadow = true;
+    leaves.position.y=3.5;
+    leaves.castShadow=true;
 
-    g.add(trunk);
-    g.add(leaves);
-
+    g.add(trunk,leaves);
     g.position.set(x,0,z);
     scene.add(g);
 }
 
-// ================= BUILDING / SHOP =================
-function shop(x,z){
-    const g = new THREE.Group();
+// ================= SHOP =================
+const shops=[];
 
-    const building = new THREE.Mesh(
+function shop(x,z){
+    const g=new THREE.Group();
+
+    const b=new THREE.Mesh(
         new THREE.BoxGeometry(10,10,10),
         new THREE.MeshStandardMaterial({color:0x888888})
     );
-    building.position.y = 5;
-    building.castShadow = true;
+    b.position.y=5;
+    b.castShadow=true;
 
-    // дверь
-    const door = new THREE.Mesh(
+    const door=new THREE.Mesh(
         new THREE.BoxGeometry(2,3,0.2),
         new THREE.MeshStandardMaterial({color:0x3b2a1a})
     );
     door.position.set(0,1.5,5.1);
 
-    // свет внутри магазина
-    const light = new THREE.PointLight(0xffcc88, 1, 30);
-    light.position.set(0,6,0);
-
-    g.add(building);
-    g.add(door);
-    g.add(light);
-
+    g.add(b,door);
     g.position.set(x,0,z);
+
     scene.add(g);
 
-    return {x,z};
+    shops.push({x,z});
 }
 
 // ================= WORLD =================
-for(let i=0;i<80;i++){
-    tree(Math.random()*300-150, Math.random()*300-150);
+for(let i=0;i<70;i++){
+    tree(Math.random()*300-150,Math.random()*300-150);
 }
 
-// магазины
-const shops = [];
-for(let i=0;i<8;i++){
-    shops.push(shop(Math.random()*200-100, Math.random()*200-100));
+for(let i=0;i<10;i++){
+    shop(Math.random()*200-100,Math.random()*200-100);
 }
 
 // ================= PHYSICS =================
-let velY = 0;
-const gravity = 0.008;
-let grounded = true;
+let velY=0;
+let grounded=true;
+const gravity=0.008;
 
 // ================= UPDATE =================
 function update(){
@@ -156,32 +154,33 @@ function update(){
 
     let dx=0,dz=0;
 
-    // ✔ ПРАВИЛЬНОЕ FPS ДВИЖЕНИЕ
-    if(keys["keyw"]) dz += 1;
-    if(keys["keys"]) dz -= 1;
-    if(keys["keya"]) dx -= 1;
-    if(keys["keyd"]) dx += 1;
+    if(keys["keyw"]) dz+=1;
+    if(keys["keys"]) dz-=1;
+    if(keys["keya"]) dx-=1;
+    if(keys["keyd"]) dx+=1;
 
-    const len = Math.hypot(dx,dz);
-    if(len>0){ dx/=len; dz/=len; }
+    const len=Math.hypot(dx,dz);
+    if(len){dx/=len;dz/=len;}
 
-    const fx = Math.sin(yaw);
-    const fz = Math.cos(yaw);
-    const rx = Math.cos(yaw);
-    const rz = -Math.sin(yaw);
+    const fx=Math.sin(yaw);
+    const fz=Math.cos(yaw);
+
+    // ✔ FIX A/D (правильное направление)
+    const rx=-Math.cos(yaw);
+    const rz=Math.sin(yaw);
 
     player.position.x += (fx*dz + rx*dx)*speed;
     player.position.z += (fz*dz + rz*dx)*speed;
 
     // jump
     if(keys["space"] && grounded){
-        velY = 0.18;
+        velY=0.18;
         grounded=false;
     }
 
     if(!grounded){
-        velY -= gravity;
-        player.position.y += velY;
+        velY-=gravity;
+        player.position.y+=velY;
 
         if(player.position.y<=2){
             player.position.y=2;
@@ -190,9 +189,20 @@ function update(){
         }
     }
 
+    // ✔ ВХОД В МАГАЗИН
+    for(let s of shops){
+        const dxp=player.position.x-s.x;
+        const dzp=player.position.z-s.z;
+        const dist=Math.sqrt(dxp*dxp+dzp*dzp);
+
+        if(dist<6){
+            player.position.set(s.x,4,s.z);
+        }
+    }
+
     camera.position.copy(player.position);
 
-    const dir = new THREE.Vector3(
+    const dir=new THREE.Vector3(
         Math.sin(yaw)*Math.cos(pitch),
         Math.sin(pitch),
         Math.cos(yaw)*Math.cos(pitch)
