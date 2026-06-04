@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fixed Drift Car</title>
+<title>LEGO Drift Physics</title>
 <style>
 body { margin:0; overflow:hidden; }
 canvas { display:block; }
@@ -17,6 +17,7 @@ canvas { display:block; }
 
 // ================= SCENE =================
 const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xaad6ff, 40, 220);
 scene.background = new THREE.Color(0xaad6ff);
 
 // ================= CAMERA =================
@@ -25,71 +26,114 @@ const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000
 // ================= RENDER =================
 const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // ================= LIGHT =================
-scene.add(new THREE.AmbientLight(0xffffff,0.6));
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+sun.position.set(80,140,60);
+sun.castShadow = true;
+scene.add(sun);
+
+scene.add(new THREE.AmbientLight(0xffffff,0.4));
 
 // ================= GROUND =================
 const ground = new THREE.Mesh(
-    new THREE.PlaneGeometry(500,500),
+    new THREE.PlaneGeometry(800,800),
     new THREE.MeshStandardMaterial({color:0x2fa84a})
 );
-ground.rotation.x = -Math.PI/2;
+ground.rotation.x=-Math.PI/2;
 scene.add(ground);
 
 // ================= PLAYER =================
 const player = new THREE.Object3D();
-player.position.y = 2;
+player.position.y=2;
 scene.add(player);
 
 // ================= INPUT =================
-const keys = {};
+const keys={};
 document.addEventListener("keydown",e=>keys[e.code.toLowerCase()]=true);
 document.addEventListener("keyup",e=>keys[e.code.toLowerCase()]=false);
 
 // ================= MOUSE =================
-let yaw = 0, pitch = 0;
+let yaw=0,pitch=0;
 document.addEventListener("mousemove",(e)=>{
     if(!document.pointerLockElement) return;
-    yaw -= e.movementX * 0.002;
-    pitch -= e.movementY * 0.002;
-    pitch = Math.max(-1.4, Math.min(1.4, pitch));
+    yaw-=e.movementX*0.002;
+    pitch-=e.movementY*0.002;
+    pitch=Math.max(-1.4,Math.min(1.4,pitch));
 });
-document.body.onclick = () => document.body.requestPointerLock();
+document.body.onclick=()=>document.body.requestPointerLock();
 
 // ================= TREES =================
 const trees=[];
 function tree(x,z){
-    const t=new THREE.Mesh(
+    const g=new THREE.Group();
+
+    const trunk=new THREE.Mesh(
         new THREE.BoxGeometry(1,3,1),
         new THREE.MeshStandardMaterial({color:0x6b3e1d})
     );
-    t.position.set(x,1.5,z);
-    scene.add(t);
-    trees.push(t);
+    trunk.position.y=1.5;
+
+    const leaves=new THREE.Mesh(
+        new THREE.BoxGeometry(3,3,3),
+        new THREE.MeshStandardMaterial({color:0x1f7a2e})
+    );
+    leaves.position.y=4;
+
+    g.add(trunk,leaves);
+    g.position.set(x,0,z);
+
+    scene.add(g);
+    trees.push(g);
 }
 
-// ================= CAR =================
-function createCar(x,z){
+// ================= FLYING CUBES =================
+const flyingCubes=[];
 
-    const car = new THREE.Group();
+// ================= LEGO CAR =================
+function createCar(color,x,z){
 
-    const body = new THREE.Mesh(
-        new THREE.BoxGeometry(4,1,6),
-        new THREE.MeshStandardMaterial({color:0xff0000})
+    const car=new THREE.Group();
+
+    const bricks=[];
+    const size=6;
+
+    for(let i=0;i<60;i++){
+        const b=new THREE.Mesh(
+            new THREE.BoxGeometry(0.8,0.8,0.8),
+            new THREE.MeshStandardMaterial({color})
+        );
+
+        b.position.set(
+            (Math.random()-0.5)*size,
+            (Math.random()*3),
+            (Math.random()-0.5)*size
+        );
+
+        car.add(b);
+        bricks.push(b);
+    }
+
+    const glass=new THREE.Mesh(
+        new THREE.BoxGeometry(4,1.5,3),
+        new THREE.MeshStandardMaterial({
+            color:0x99ccff,
+            transparent:true,
+            opacity:0.4
+        })
     );
-    body.position.y = 1;
-    car.add(body);
+    glass.position.y=2;
+    car.add(glass);
 
-    const wheels = [];
-
+    const wheels=[];
     function wheel(x,z){
         const w=new THREE.Mesh(
             new THREE.CylinderGeometry(0.6,0.6,0.5,16),
             new THREE.MeshStandardMaterial({color:0x111})
         );
-        w.rotation.z = Math.PI/2;
+        w.rotation.z=Math.PI/2;
         w.position.set(x,0.6,z);
         car.add(w);
         wheels.push(w);
@@ -99,84 +143,81 @@ function createCar(x,z){
 
     car.position.set(x,0,z);
 
-    car.userData = {
+    car.userData={
         speed:0,
         yaw:0,
-        vel:new THREE.Vector3(),
-        wheels
+        vel: new THREE.Vector3(0,0,0), // 🔥 ДРИФТ ВЕКТОР
+        bricks,
+        wheels,
+        damage:0
     };
 
     scene.add(car);
     return car;
 }
 
-const car = createCar(0,0);
-let currentCar = car;
+// ================= CARS =================
+const cars=[
+    createCar(0xff0000,20,20),
+    createCar(0x3333ff,-20,10)
+];
 
-// ================= DRIFT FIX =================
-function updateCar(){
+let currentCar=null;
 
-    const c = currentCar;
+// ================= DAMAGE =================
+function breakCar(car){
 
-    // ================= SPEED LIMIT FIX =================
-    const MAX_SPEED = 0.35;   // ❗ нормальная скорость
-    const ACC = 0.008;
+    car.userData.damage++;
 
-    if(keys["keyw"]) c.userData.speed += ACC;
-    else c.userData.speed *= 0.97;
+    for(let i=0;i<15;i++){
 
-    if(keys["keys"]) c.userData.speed -= ACC * 1.5;
+        const b=car.userData.bricks[Math.floor(Math.random()*car.userData.bricks.length)];
+        if(!b) continue;
 
-    c.userData.speed = Math.max(-0.15, Math.min(MAX_SPEED, c.userData.speed));
+        car.remove(b);
+        scene.add(b);
 
-    // ================= TURN =================
-    const turn = 0.04 + Math.abs(c.userData.speed)*0.05;
+        b.position.copy(car.position);
 
-    if(keys["keya"]) c.userData.yaw += turn;
-    if(keys["keyd"]) c.userData.yaw -= turn;
+        b.userData={
+            vel:new THREE.Vector3(
+                (Math.random()-0.5)*1.2,
+                Math.random()*1.2,
+                (Math.random()-0.5)*1.2
+            )
+        };
 
-    c.rotation.y = c.userData.yaw;
+        flyingCubes.push(b);
+    }
 
-    // ================= REAL DRIFT =================
-    const forward = new THREE.Vector3(
-        Math.sin(c.userData.yaw),
-        0,
-        Math.cos(c.userData.yaw)
-    );
-
-    const right = new THREE.Vector3(
-        Math.cos(c.userData.yaw),
-        0,
-        -Math.sin(c.userData.yaw)
-    );
-
-    // движение вперед
-    const forwardMove = forward.multiplyScalar(c.userData.speed);
-
-    // боковое скольжение (дрифт)
-    const sideSlip = right.multiplyScalar(
-        c.userData.speed * (keys["space"] ? 0.6 : 0.25)
-    );
-
-    // итоговая скорость
-    c.userData.vel.multiplyScalar(0.9);
-    c.userData.vel.add(forwardMove);
-    c.userData.vel.add(sideSlip);
-
-    c.position.add(c.userData.vel);
-
-    // ================= WHEELS =================
-    c.userData.wheels.forEach(w=>{
-        w.rotation.x += c.userData.speed * 2;
-    });
+    if(car.userData.damage>8){
+        scene.remove(car);
+        currentCar=null;
+    }
 }
 
-// ================= CAMERA (НЕ ТРОГАЮ) =================
-function cameraFollow(){
+// ================= UPDATE CUBES =================
+function updateCubes(){
 
+    flyingCubes.forEach(b=>{
+        b.position.add(b.userData.vel);
+        b.userData.vel.y -= 0.04;
+
+        if(b.position.y<0.4){
+            b.position.y=0.4;
+            b.userData.vel.y *= -0.4;
+            b.userData.vel.x *= 0.7;
+            b.userData.vel.z *= 0.7;
+        }
+    });
+
+}
+
+// ================= CAMERA =================
+function fpsCamera(){
     camera.position.copy(player.position);
 
-    const dir = new THREE.Vector3(
+    const dir=new THREE.Vector3(
         Math.sin(yaw)*Math.cos(pitch),
         Math.sin(pitch),
         Math.cos(yaw)*Math.cos(pitch)
@@ -185,11 +226,118 @@ function cameraFollow(){
     camera.lookAt(player.position.clone().add(dir));
 }
 
+function carCamera(car){
+    const offset=new THREE.Vector3(
+        -Math.sin(car.userData.yaw)*8,
+        3,
+        -Math.cos(car.userData.yaw)*8
+    );
+
+    camera.position.copy(car.position.clone().add(offset));
+    camera.lookAt(car.position);
+}
+
 // ================= UPDATE =================
 function update(){
 
-    updateCar();
-    cameraFollow();
+    let dx=0,dz=0;
+
+    if(keys["keyw"]) dz+=1;
+    if(keys["keys"]) dz-=1;
+    if(keys["keya"]) dx-=1;
+    if(keys["keyd"]) dx+=1;
+
+    const len=Math.hypot(dx,dz);
+    if(len){dx/=len;dz/=len;}
+
+    const fx=Math.sin(yaw);
+    const fz=Math.cos(yaw);
+    const rightX=Math.cos(yaw);
+    const rightZ=-Math.sin(yaw);
+
+    if(!currentCar){
+        player.position.x += (fx*dz + rightX*dx)*0.12;
+        player.position.z += (fz*dz + rightZ*dx)*0.12;
+    }
+
+    if(currentCar){
+
+        const c=currentCar;
+
+        // ================= ENGINE =================
+        if(keys["keyw"]) c.userData.speed += 0.015;
+        else c.userData.speed *= 0.97;
+
+        c.userData.speed=Math.min(1.0,Math.max(0,c.userData.speed));
+
+        if(keys["keys"]) c.userData.speed -= 0.02;
+
+        // ================= DRIFT PHYSICS =================
+        const dirX=Math.sin(c.userData.yaw);
+        const dirZ=Math.cos(c.userData.yaw);
+
+        const forward=new THREE.Vector3(dirX,0,dirZ);
+
+        const forwardVel=forward.multiplyScalar(c.userData.speed);
+
+        // боковое скольжение (дрифт)
+        const side=new THREE.Vector3(-dirZ,0,dirX);
+        c.userData.vel.multiplyScalar(0.92); // friction
+
+        c.userData.vel.add(forwardVel);
+
+        // движение
+        c.position.add(c.userData.vel);
+
+        // ================= TURN =================
+        const turnSpeed = 0.03 + c.userData.speed*0.05;
+
+        if(keys["keya"]) c.userData.yaw += turnSpeed;
+        if(keys["keyd"]) c.userData.yaw -= turnSpeed;
+
+        c.rotation.y=c.userData.yaw;
+
+        // ================= WHEELS =================
+        c.userData.wheels.forEach(w=>{
+            w.rotation.x += c.userData.speed*2;
+        });
+
+        // ================= COLLISION =================
+        for(let i=trees.length-1;i>=0;i--){
+            const t=trees[i];
+
+            if(c.position.distanceTo(t.position)<4){
+                scene.remove(t);
+                trees.splice(i,1);
+                breakCar(c);
+            }
+        }
+
+        player.position.copy(c.position);
+    }
+
+    // enter/exit
+    if(keys["keyf"]){
+        if(!currentCar){
+            let nearest=null,dist=999;
+
+            for(const c of cars){
+                const d=c.position.distanceTo(player.position);
+                if(d<5 && d<dist){
+                    nearest=c;
+                    dist=d;
+                }
+            }
+            if(nearest) currentCar=nearest;
+        } else {
+            currentCar=null;
+        }
+    }
+
+    updateCubes();
+
+    if(!currentCar) fpsCamera();
+    else carCamera(currentCar);
 }
 
 // ================= LOOP =================
@@ -199,6 +347,11 @@ function animate(){
     renderer.render(scene,camera);
 }
 animate();
+
+// ================= WORLD =================
+for(let i=0;i<120;i++){
+    tree(Math.random()*300-150,Math.random()*300-150);
+}
 
 </script>
 </body>
