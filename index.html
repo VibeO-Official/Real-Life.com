@@ -182,6 +182,12 @@ canvas{display:block;}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+if (typeof THREE === 'undefined') {
+  document.body.innerHTML = '<div style="color:#fff;padding:40px;font-family:sans-serif;font-size:18px;">Error: Three.js failed to load. Check your internet connection.</div>';
+  throw new Error('Three.js not loaded');
+}
+</script>
+<script>
 // ════════════════════════════════════════════════
 // SCENE
 // ════════════════════════════════════════════════
@@ -674,7 +680,7 @@ function killZombie(z) {
   totalKills++;
   if(z.userData.isBoss) killedBosses++;
   updateHUD();
-  addKillFeed(z.userData.isBoss ? 'БОСС Убит! +100 : ' Убит! +10 );
+  addKillFeed(z.userData.isBoss ? 'БОСС Убит! +100' : 'Убит! +10');
 }
 
 function updateZombies(playerPos) {
@@ -1238,7 +1244,7 @@ function updateHUD() {
   document.getElementById('hp-bar').style.width = playerHP+'%';
   document.getElementById('hp-bar').style.background =
     playerHP>50?'#22ee55':playerHP>25?'#ffaa00':'#ff2222';
-  document.getElementById('coins-hud').textContent = '\u{1F4B0} '+coins;
+  document.getElementById('coins-hud').textContent = '\uD83D\uDCB0 '+coins;
   var w = weaponDefs[currentWeapon];
   document.getElementById('weapon-hud').textContent = w.icon+' '+w.name;
   document.getElementById('wave-num').textContent = wave;
@@ -1278,58 +1284,69 @@ try {
   var script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
   script.onload = function() {
-    var sb = window.supabase.createClient(supabaseUrl, supabaseKey);
-    var channel = sb.channel('game-world', { config: { broadcast: { self: false } } });
+    try {
+      var sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+      var channel = sb.channel('game-world', { config: { broadcast: { self: false } } });
 
-    channel.on('broadcast', { event: 'player-move' }, function(payload) {
-      var data = payload.payload;
-      if (data.id === myPlayerId) return;
-      if (!otherPlayers[data.id]) {
-        var g = new THREE.Group();
-        var vm = function(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.7});};
-        var legs = new THREE.Mesh(new THREE.BoxGeometry(0.8,1,0.6),vm(0x2244aa));
-        legs.position.set(0,0.5,0); legs.castShadow=true; g.add(legs);
-        var torso = new THREE.Mesh(new THREE.BoxGeometry(1,1.2,0.6),vm(0x33aaff));
-        torso.position.set(0,1.6,0); torso.castShadow=true; g.add(torso);
-        var head = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.7),vm(0xffcc99));
-        head.position.set(0,2.6,0); head.castShadow=true; g.add(head);
-        scene.add(g);
-        otherPlayers[data.id] = { mesh: g, lastUpdate: Date.now() };
-      }
-      var op = otherPlayers[data.id];
-      op.mesh.position.set(data.x, data.y, data.z);
-      op.mesh.rotation.y = data.rot || 0;
-      op.lastUpdate = Date.now();
-    });
-
-    channel.on('broadcast', { event: 'player-leave' }, function(payload) {
-      var data = payload.payload;
-      if (otherPlayers[data.id]) {
-        scene.remove(otherPlayers[data.id].mesh);
-        delete otherPlayers[data.id];
-      }
-    });
-
-    channel.subscribe();
-
-    setInterval(function(){
-      channel.send({
-        type: 'broadcast',
-        event: 'player-move',
-        payload: { id: myPlayerId, x: player.position.x, y: player.position.y, z: player.position.z, rot: yaw }
+      channel.on('broadcast', { event: 'player-move' }, function(payload) {
+        try {
+          var data = payload.payload;
+          if (data.id === myPlayerId) return;
+          if (!otherPlayers[data.id]) {
+            var g = new THREE.Group();
+            var vm = function(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.7});};
+            var legs = new THREE.Mesh(new THREE.BoxGeometry(0.8,1,0.6),vm(0x2244aa));
+            legs.position.set(0,0.5,0); legs.castShadow=true; g.add(legs);
+            var torso = new THREE.Mesh(new THREE.BoxGeometry(1,1.2,0.6),vm(0x33aaff));
+            torso.position.set(0,1.6,0); torso.castShadow=true; g.add(torso);
+            var head = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.7),vm(0xffcc99));
+            head.position.set(0,2.6,0); head.castShadow=true; g.add(head);
+            scene.add(g);
+            otherPlayers[data.id] = { mesh: g, lastUpdate: Date.now() };
+          }
+          var op = otherPlayers[data.id];
+          op.mesh.position.set(data.x, data.y, data.z);
+          op.mesh.rotation.y = data.rot || 0;
+          op.lastUpdate = Date.now();
+        } catch(ex2) { console.warn('MP event error:', ex2); }
       });
-    }, 100);
 
-    setInterval(function(){
-      var now = Date.now();
-      Object.keys(otherPlayers).forEach(function(id){
-        if(now - otherPlayers[id].lastUpdate > 10000){
-          scene.remove(otherPlayers[id].mesh);
-          delete otherPlayers[id];
-        }
+      channel.on('broadcast', { event: 'player-leave' }, function(payload) {
+        try {
+          var data = payload.payload;
+          if (otherPlayers[data.id]) {
+            scene.remove(otherPlayers[data.id].mesh);
+            delete otherPlayers[data.id];
+          }
+        } catch(ex3) { console.warn('MP leave error:', ex3); }
       });
-    }, 5000);
+
+      channel.subscribe();
+
+      setInterval(function(){
+        try {
+          channel.send({
+            type: 'broadcast',
+            event: 'player-move',
+            payload: { id: myPlayerId, x: player.position.x, y: player.position.y, z: player.position.z, rot: yaw }
+          });
+        } catch(ex4) {}
+      }, 100);
+
+      setInterval(function(){
+        try {
+          var now = Date.now();
+          Object.keys(otherPlayers).forEach(function(id){
+            if(now - otherPlayers[id].lastUpdate > 10000){
+              scene.remove(otherPlayers[id].mesh);
+              delete otherPlayers[id];
+            }
+          });
+        } catch(ex5) {}
+      }, 5000);
+    } catch(e1) { console.warn('MP init error:', e1); }
   };
+  script.onerror = function() { console.warn('Supabase SDK failed to load'); };
   document.head.appendChild(script);
 } catch(e) { console.warn('Multiplayer failed:', e); }
 
