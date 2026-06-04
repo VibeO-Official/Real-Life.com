@@ -953,8 +953,8 @@ function updateVehicle(v) {
   if (keys['KeyA']) v.userData.yaw -= turn;
   if (keys['KeyD']) v.userData.yaw += turn;
 
-  var dirX = Math.sin(v.userData.yaw);
-  var dirZ = Math.cos(v.userData.yaw);
+  var dirX = -Math.sin(v.userData.yaw);
+  var dirZ = -Math.cos(v.userData.yaw);
   var forward = new THREE.Vector3(dirX, 0, dirZ);
   var isDrift = !isBus && keys['Space'] && v.userData.speed > 0.25;
   var grip = isDrift ? 0.68 : (isBus ? 0.87 : 0.80);
@@ -1005,9 +1005,9 @@ function updateVehicle(v) {
 // ════════════════════════════════════════════════
 function fpsCamera() {
   camera.position.copy(player.position);
-  var tx = player.position.x + Math.sin(yaw)*Math.cos(pitch);
+  var tx = player.position.x - Math.sin(yaw)*Math.cos(pitch);
   var ty = player.position.y + Math.sin(pitch);
-  var tz = player.position.z + Math.cos(yaw)*Math.cos(pitch);
+  var tz = player.position.z - Math.cos(yaw)*Math.cos(pitch);
   camera.lookAt(tx, ty, tz);
 }
 
@@ -1015,9 +1015,9 @@ function vehicleCamera(v) {
   var bd = v.userData.type==='bus' ? 14 : 10;
   var ht = v.userData.type==='bus' ? 6  : 4;
   camera.position.set(
-    v.position.x - Math.sin(v.userData.yaw)*bd,
+    v.position.x + Math.sin(v.userData.yaw)*bd,
     v.position.y + ht,
-    v.position.z - Math.cos(v.userData.yaw)*bd
+    v.position.z + Math.cos(v.userData.yaw)*bd
   );
   camera.lookAt(v.position.x, v.position.y+2, v.position.z);
 }
@@ -1385,8 +1385,8 @@ function update() {
 
     // Forward: (sin(yaw), 0, cos(yaw))
     // Right strafe: (cos(yaw), 0, -sin(yaw))
-    var fwdX = Math.sin(yaw);
-    var fwdZ = Math.cos(yaw);
+    var fwdX = -Math.sin(yaw);
+    var fwdZ = -Math.cos(yaw);
     var rgtX = Math.cos(yaw);
     var rgtZ = -Math.sin(yaw);
 
