@@ -48,7 +48,7 @@ canvas{display:block;}
   opacity:0;pointer-events:none;z-index:20;transition:opacity .1s;
 }
 #bottom-hud{
-  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%);
   display:flex;align-items:center;gap:12px;pointer-events:none;z-index:20;
 }
 .hud-pill{
@@ -135,13 +135,192 @@ canvas{display:block;}
   background:radial-gradient(ellipse at center,transparent 50%,rgba(30,10,0,.3) 100%);
   transition:opacity .5s;
 }
+
+/* ═══ MAIN MENU ═══ */
+#main-menu{
+  position:fixed;inset:0;z-index:100;
+  background:linear-gradient(135deg,#0a0a1a 0%,#1a1a3a 50%,#0a0a1a 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;
+}
+#main-menu.hidden{display:none;}
+#main-menu h1{
+  font-size:52px;font-weight:900;color:#ff4444;
+  text-shadow:0 0 40px rgba(255,50,50,.6),0 4px 20px rgba(0,0,0,.8);
+  margin-bottom:10px;letter-spacing:4px;
+}
+#main-menu h2{
+  font-size:18px;color:#888;margin-bottom:30px;font-weight:400;
+}
+.menu-btn{
+  width:280px;padding:18px 30px;font-size:18px;font-weight:700;
+  border:2px solid;border-radius:14px;cursor:pointer;
+  transition:all .2s;text-transform:uppercase;letter-spacing:2px;
+}
+.menu-btn.primary{
+  background:linear-gradient(135deg,#22aa44,#118833);
+  border-color:#33cc55;color:#fff;
+}
+.menu-btn.primary:hover{
+  background:linear-gradient(135deg,#33cc55,#22aa44);
+  transform:scale(1.05);box-shadow:0 0 30px rgba(50,200,80,.5);
+}
+.menu-btn.secondary{
+  background:linear-gradient(135deg,#3344aa,#2233aa);
+  border-color:#4466ff;color:#fff;
+}
+.menu-btn.secondary:hover{
+  background:linear-gradient(135deg,#4466ff,#3344cc);
+  transform:scale(1.05);box-shadow:0 0 30px rgba(70,100,255,.5);
+}
+#player-name-display{
+  color:#aaa;font-size:14px;margin-top:20px;
+}
+
+/* ═══ REGISTRATION ═══ */
+#registration{
+  position:fixed;inset:0;z-index:110;
+  background:linear-gradient(135deg,#0a0a1a 0%,#1a1a3a 50%,#0a0a1a 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+#registration.hidden{display:none;}
+#registration h1{
+  font-size:36px;color:#fff;margin-bottom:30px;
+}
+#registration input{
+  width:300px;padding:16px 20px;font-size:18px;
+  border:2px solid #444;border-radius:12px;
+  background:#1a1a2a;color:#fff;outline:none;
+  margin-bottom:20px;text-align:center;
+}
+#registration input:focus{border-color:#4466ff;}
+#registration input::placeholder{color:#666;}
+#reg-btn{
+  width:300px;padding:16px;font-size:18px;font-weight:700;
+  background:linear-gradient(135deg,#4466ff,#3344cc);
+  border:2px solid #5577ff;border-radius:12px;color:#fff;cursor:pointer;
+}
+#reg-btn:hover{background:linear-gradient(135deg,#5577ff,#4466ff);}
+
+/* ═══ MULTIPLAYER MENU ═══ */
+#mp-menu{
+  position:fixed;inset:0;z-index:105;
+  background:rgba(0,0,0,.95);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#mp-menu.open{display:flex;}
+#mp-menu h2{color:#4466ff;font-size:28px;margin-bottom:20px;}
+#mp-menu input{
+  width:300px;padding:14px;font-size:16px;
+  border:2px solid #444;border-radius:10px;
+  background:#1a1a2a;color:#fff;outline:none;text-align:center;
+}
+#mp-menu input:focus{border-color:#4466ff;}
+#mp-join-btn,#mp-back-btn{
+  width:300px;padding:14px;font-size:16px;font-weight:700;
+  border-radius:10px;cursor:pointer;border:2px solid;
+}
+#mp-join-btn{
+  background:linear-gradient(135deg,#22aa44,#118833);
+  border-color:#33cc55;color:#fff;
+}
+#mp-back-btn{
+  background:rgba(255,255,255,.1);border-color:#666;color:#aaa;
+}
+
+/* ═══ DEATH SCREEN ═══ */
+#death-screen{
+  position:fixed;inset:0;z-index:90;
+  background:rgba(20,0,0,.92);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:24px;
+}
+#death-screen.open{display:flex;}
+#death-screen h1{
+  font-size:64px;color:#ff2222;font-weight:900;
+  text-shadow:0 0 60px rgba(255,0,0,.8);
+  animation:deathPulse 1s ease infinite;
+}
+@keyframes deathPulse{
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.05);}
+}
+#death-screen p{color:#aaa;font-size:18px;margin-bottom:20px;}
+.death-btn{
+  width:240px;padding:16px;font-size:16px;font-weight:700;
+  border-radius:12px;cursor:pointer;border:2px solid;
+}
+#respawn-btn{
+  background:linear-gradient(135deg,#22aa44,#118833);
+  border-color:#33cc55;color:#fff;
+}
+#menu-btn{
+  background:rgba(255,255,255,.1);border-color:#666;color:#ccc;
+}
+
+/* ═══ INVENTORY BAR ═══ */
+#inventory-bar{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;z-index:25;pointer-events:none;
+}
+.inv-slot{
+  width:60px;height:60px;
+  background:rgba(0,0,0,.75);
+  border:2px solid rgba(255,255,255,.2);
+  border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  position:relative;pointer-events:auto;cursor:pointer;
+  transition:all .15s;
+}
+.inv-slot:hover{border-color:rgba(255,255,255,.5);}
+.inv-slot.active{
+  border-color:#ffcc00;background:rgba(80,60,0,.6);
+  box-shadow:0 0 15px rgba(255,200,0,.4);
+}
+.inv-slot.locked{opacity:.4;cursor:default;}
+.inv-slot .slot-key{
+  position:absolute;top:2px;left:6px;
+  font-size:10px;color:#888;font-weight:700;
+}
+.inv-slot canvas{width:44px;height:44px;}
 </style>
 </head>
 <body>
 
+<!-- REGISTRATION SCREEN -->
+<div id="registration">
+  <h1>🎮 Введите ваш ник</h1>
+  <input type="text" id="nickname-input" placeholder="Ваш никнейм..." maxlength="20">
+  <button id="reg-btn">Продолжить</button>
+</div>
+
+<!-- MAIN MENU -->
+<div id="main-menu" class="hidden">
+  <h1>🧟 ZOMBIE SURVIVAL</h1>
+  <h2>LEGO Edition</h2>
+  <button class="menu-btn primary" id="new-game-btn">Новая игра</button>
+  <button class="menu-btn secondary" id="multiplayer-btn">Мультиплеер</button>
+  <div id="player-name-display">Игрок: <span id="display-nick"></span></div>
+</div>
+
+<!-- MULTIPLAYER MENU -->
+<div id="mp-menu">
+  <h2>🌐 Мультиплеер</h2>
+  <input type="text" id="host-nick-input" placeholder="Ник игрока для подключения...">
+  <button id="mp-join-btn">Присоединиться</button>
+  <button id="mp-back-btn">← Назад</button>
+</div>
+
+<!-- DEATH SCREEN -->
+<div id="death-screen">
+  <h1>ВЫ ПОГИБЛИ</h1>
+  <p>Убито зомби: <span id="death-kills">0</span></p>
+  <button class="death-btn" id="respawn-btn">Возрождение</button>
+  <button class="death-btn" id="menu-btn">Главное меню</button>
+</div>
+
 <div id="clock-hud"><div id="clock-time">12:00</div><div id="clock-label">ДЕНЬ</div></div>
 <div id="wave-hud"><div style="color:#fff;font-size:13px;font-weight:700;">ВОЛНА <span id="wave-num">1</span></div><div style="color:#f66;font-size:11px;font-weight:600;">Зомби: <span id="zombie-num">0</span></div><div style="color:#999;font-size:11px;">Убийств: <span id="kill-num">0</span></div><div id="boss-row" style="color:#fc0;font-size:11px;font-weight:700;display:none;">Боссов: <span id="boss-num">0</span></div></div>
-<div id="info-hud">WASD - движение | F - войти/выйти | Пробел - дрифт | ЛКМ - стрелять | E - магазин | 1 - оружие</div>
+<div id="info-hud">WASD - движение | Пробел - прыжок | F - машина | V - фары | ЛКМ - стрелять | E - магазин | 1-5/Q - оружие</div>
 <div id="drift-flash">DRIFT!</div>
 <div id="crosshair"></div>
 <div id="vignette"></div>
@@ -153,8 +332,11 @@ canvas{display:block;}
 <div id="bottom-hud">
   <div class="hud-pill">&#10084;&#65039;<div id="hp-bar-wrap"><div id="hp-bar"></div></div></div>
   <div class="hud-pill" id="coins-hud">&#128176; 0</div>
-  <div class="hud-pill" id="weapon-hud">&#128274; Пистолет</div>
+  <div class="hud-pill" id="weapon-hud">Пистолет</div>
 </div>
+
+<!-- INVENTORY BAR -->
+<div id="inventory-bar"></div>
 
 <div id="speedo-wrap">
   <canvas id="speedo-canvas" width="190" height="190"></canvas>
@@ -188,6 +370,72 @@ if (typeof THREE === 'undefined') {
 }
 </script>
 <script>
+// ════════════════════════════════════════════════
+// PLAYER DATA
+// ════════════════════════════════════════════════
+var playerNickname = localStorage.getItem('zombieGameNick') || '';
+var hostNickname = '';
+var gameStarted = false;
+
+// Registration
+var regScreen = document.getElementById('registration');
+var mainMenu = document.getElementById('main-menu');
+var nickInput = document.getElementById('nickname-input');
+var regBtn = document.getElementById('reg-btn');
+
+if (playerNickname) {
+  regScreen.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+  document.getElementById('display-nick').textContent = playerNickname;
+}
+
+regBtn.addEventListener('click', function(){
+  var nick = nickInput.value.trim();
+  if (nick.length < 2) { alert('Минимум 2 символа!'); return; }
+  playerNickname = nick;
+  localStorage.setItem('zombieGameNick', nick);
+  regScreen.classList.add('hidden');
+  mainMenu.classList.remove('hidden');
+  document.getElementById('display-nick').textContent = nick;
+});
+
+// Main Menu
+document.getElementById('new-game-btn').addEventListener('click', function(){
+  mainMenu.classList.add('hidden');
+  gameStarted = true;
+  initGame();
+});
+
+document.getElementById('multiplayer-btn').addEventListener('click', function(){
+  document.getElementById('mp-menu').classList.add('open');
+});
+
+document.getElementById('mp-back-btn').addEventListener('click', function(){
+  document.getElementById('mp-menu').classList.remove('open');
+});
+
+document.getElementById('mp-join-btn').addEventListener('click', function(){
+  hostNickname = document.getElementById('host-nick-input').value.trim();
+  if (!hostNickname) { alert('Введите ник хоста!'); return; }
+  document.getElementById('mp-menu').classList.remove('open');
+  mainMenu.classList.add('hidden');
+  gameStarted = true;
+  initGame();
+});
+
+// Death Screen
+document.getElementById('respawn-btn').addEventListener('click', function(){
+  document.getElementById('death-screen').classList.remove('open');
+  respawnPlayer();
+});
+
+document.getElementById('menu-btn').addEventListener('click', function(){
+  document.getElementById('death-screen').classList.remove('open');
+  gameStarted = false;
+  mainMenu.classList.remove('hidden');
+  resetGame();
+});
+
 // ════════════════════════════════════════════════
 // SCENE
 // ════════════════════════════════════════════════
@@ -401,7 +649,7 @@ function updateDebris() {
 }
 
 // ════════════════════════════════════════════════
-// LEGO CAR
+// LEGO CAR WITH HEADLIGHTS
 // ════════════════════════════════════════════════
 function createCar(bodyColor, x, z) {
   var g = new THREE.Group();
@@ -455,15 +703,34 @@ function createCar(bodyColor, x, z) {
   }
   addWheel(2.5,3.3); addWheel(-2.5,3.3);
   addWheel(2.5,-3.3); addWheel(-2.5,-3.3);
+
+  // HEADLIGHTS (SpotLight)
+  var headlightL = new THREE.SpotLight(0xffffee, 0, 60, Math.PI/5, 0.3, 1);
+  headlightL.position.set(-1.5, 1.5, 5);
+  headlightL.target.position.set(-1.5, 0, 20);
+  g.add(headlightL);
+  g.add(headlightL.target);
+
+  var headlightR = new THREE.SpotLight(0xffffee, 0, 60, Math.PI/5, 0.3, 1);
+  headlightR.position.set(1.5, 1.5, 5);
+  headlightR.target.position.set(1.5, 0, 20);
+  g.add(headlightR);
+  g.add(headlightR.target);
+
   g.position.set(x, 0, z);
   g.castShadow = true;
-  g.userData = { speed:0, yaw:0, vel:new THREE.Vector3(), wheels:wheels, type:'car', maxSpeedKmh:120, bodyColor:bodyColor, damageLevel:0 };
+  g.userData = { 
+    speed:0, yaw:0, vel:new THREE.Vector3(), wheels:wheels, type:'car', 
+    maxSpeedKmh:120, bodyColor:bodyColor, damageLevel:0,
+    headlights: [headlightL, headlightR],
+    lightsOn: false
+  };
   scene.add(g);
   return g;
 }
 
 // ════════════════════════════════════════════════
-// BUS
+// BUS WITH HEADLIGHTS
 // ════════════════════════════════════════════════
 function createBus(x, z) {
   var g = new THREE.Group();
@@ -510,9 +777,28 @@ function createBus(x, z) {
   addBusWheel(2.8,5.2); addBusWheel(-2.8,5.2);
   addBusWheel(2.8,0);   addBusWheel(-2.8,0);
   addBusWheel(2.8,-5.2); addBusWheel(-2.8,-5.2);
+
+  // HEADLIGHTS
+  var headlightL = new THREE.SpotLight(0xffffee, 0, 80, Math.PI/5, 0.3, 1);
+  headlightL.position.set(-1.5, 2.5, 8);
+  headlightL.target.position.set(-1.5, 0, 25);
+  g.add(headlightL);
+  g.add(headlightL.target);
+
+  var headlightR = new THREE.SpotLight(0xffffee, 0, 80, Math.PI/5, 0.3, 1);
+  headlightR.position.set(1.5, 2.5, 8);
+  headlightR.target.position.set(1.5, 0, 25);
+  g.add(headlightR);
+  g.add(headlightR.target);
+
   g.position.set(x, 0, z);
   g.castShadow = true;
-  g.userData = { speed:0, yaw:0, vel:new THREE.Vector3(), wheels:wheels, type:'bus', maxSpeedKmh:70, bodyColor:0xFFCC00, damageLevel:0 };
+  g.userData = { 
+    speed:0, yaw:0, vel:new THREE.Vector3(), wheels:wheels, type:'bus', 
+    maxSpeedKmh:70, bodyColor:0xFFCC00, damageLevel:0,
+    headlights: [headlightL, headlightR],
+    lightsOn: false
+  };
   scene.add(g);
   return g;
 }
@@ -531,10 +817,11 @@ function addCrack(vehicle) {
 }
 
 // ════════════════════════════════════════════════
-// WEAPON MODEL (key "1" toggle)
+// WEAPON MODELS (detailed 3D models)
 // ════════════════════════════════════════════════
 var weaponViewModel = null;
 var weaponVisible = true;
+var currentWeaponModel = null;
 
 function buildPistolModel() {
   var g = new THREE.Group();
@@ -565,10 +852,146 @@ function buildPistolModel() {
   return g;
 }
 
-(function createWeaponModels(){
+function buildShotgunModel() {
+  var g = new THREE.Group();
+  var darkMetal = new THREE.MeshStandardMaterial({color:0x2a2a2a, roughness:0.3, metalness:0.9});
+  var woodMat = new THREE.MeshStandardMaterial({color:0x5c3a1e, roughness:0.7});
+  var accentMat = new THREE.MeshStandardMaterial({color:0xff4400, emissive:0xff2200, emissiveIntensity:0.3, metalness:0.6});
+
+  // Long barrel
+  var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.55), darkMetal);
+  barrel.position.set(0,0.02,-0.25); g.add(barrel);
+  // Second barrel (double)
+  var barrel2 = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.55), darkMetal);
+  barrel2.position.set(0,0.07,-0.25); g.add(barrel2);
+  // Receiver
+  var receiver = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.1,0.2), darkMetal);
+  receiver.position.set(0,0.04,0.05); g.add(receiver);
+  // Stock
+  var stock = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.08,0.2), woodMat);
+  stock.position.set(0,-0.02,0.2); stock.rotation.x=0.15; g.add(stock);
+  // Grip
+  var grip = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.1,0.04), woodMat);
+  grip.position.set(0,-0.08,0.08); grip.rotation.x=0.3; g.add(grip);
+  // Accent
+  var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.085,0.01,0.08), accentMat);
+  stripe.position.set(0,0.1,0.02); g.add(stripe);
+  return g;
+}
+
+function buildRifleModel() {
+  var g = new THREE.Group();
+  var darkMetal = new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:0.25, metalness:0.95});
+  var lightMetal = new THREE.MeshStandardMaterial({color:0x444444, roughness:0.4, metalness:0.85});
+  var accentMat = new THREE.MeshStandardMaterial({color:0x00ff88, emissive:0x00cc66, emissiveIntensity:0.4, metalness:0.6});
+
+  // Long barrel
+  var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.5), darkMetal);
+  barrel.position.set(0,0.03,-0.25); g.add(barrel);
+  // Upper receiver
+  var upper = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.07,0.25), darkMetal);
+  upper.position.set(0,0.035,0.05); g.add(upper);
+  // Magazine
+  var mag = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.12,0.06), lightMetal);
+  mag.position.set(0,-0.06,0.02); g.add(mag);
+  // Stock
+  var stock = new THREE.Mesh(new THREE.BoxGeometry(0.055,0.06,0.18), darkMetal);
+  stock.position.set(0,0,0.22); g.add(stock);
+  // Grip
+  var grip = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.09,0.03), darkMetal);
+  grip.position.set(0,-0.08,0.1); grip.rotation.x=0.25; g.add(grip);
+  // Rail
+  var rail = new THREE.Mesh(new THREE.BoxGeometry(0.065,0.015,0.2), lightMetal);
+  rail.position.set(0,0.075,0); g.add(rail);
+  // Accent stripe
+  var stripe = new THREE.Mesh(new THREE.BoxGeometry(0.065,0.01,0.15), accentMat);
+  stripe.position.set(0,0.085,-0.05); g.add(stripe);
+  return g;
+}
+
+function buildSniperModel() {
+  var g = new THREE.Group();
+  var darkMetal = new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:0.2, metalness:0.95});
+  var lightMetal = new THREE.MeshStandardMaterial({color:0x333333, roughness:0.35, metalness:0.9});
+  var accentMat = new THREE.MeshStandardMaterial({color:0xff0066, emissive:0xcc0044, emissiveIntensity:0.5, metalness:0.7});
+  var scopeMat = new THREE.MeshStandardMaterial({color:0x111122, roughness:0.1, metalness:1.0});
+
+  // Very long barrel
+  var barrel = new THREE.Mesh(new THREE.BoxGeometry(0.035,0.035,0.7), darkMetal);
+  barrel.position.set(0,0.02,-0.35); g.add(barrel);
+  // Receiver
+  var receiver = new THREE.Mesh(new THREE.BoxGeometry(0.065,0.08,0.3), darkMetal);
+  receiver.position.set(0,0.04,0.1); g.add(receiver);
+  // Scope base
+  var scopeBase = new THREE.Mesh(new THREE.BoxGeometry(0.03,0.03,0.15), lightMetal);
+  scopeBase.position.set(0,0.09,0.02); g.add(scopeBase);
+  // Scope tube
+  var scopeTube = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.12,12), scopeMat);
+  scopeTube.rotation.x=Math.PI/2; scopeTube.position.set(0,0.12,0); g.add(scopeTube);
+  // Scope lens
+  var lens = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.01,12), accentMat);
+  lens.rotation.x=Math.PI/2; lens.position.set(0,0.12,-0.06); g.add(lens);
+  // Stock
+  var stock = new THREE.Mesh(new THREE.BoxGeometry(0.055,0.07,0.25), darkMetal);
+  stock.position.set(0,0.01,0.35); g.add(stock);
+  // Grip
+  var grip = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.1,0.035), darkMetal);
+  grip.position.set(0,-0.08,0.15); grip.rotation.x=0.2; g.add(grip);
+  // Bipod
+  [-0.03,0.03].forEach(function(ox){
+    var leg = new THREE.Mesh(new THREE.BoxGeometry(0.01,0.08,0.01), lightMetal);
+    leg.position.set(ox,-0.04,-0.2); leg.rotation.x=-0.3; g.add(leg);
+  });
+  return g;
+}
+
+function buildKnifeModel() {
+  var g = new THREE.Group();
+  var bladeMat = new THREE.MeshStandardMaterial({color:0xcccccc, roughness:0.15, metalness:1.0});
+  var handleMat = new THREE.MeshStandardMaterial({color:0x2a2a2a, roughness:0.8});
+  var accentMat = new THREE.MeshStandardMaterial({color:0xff3300, emissive:0xcc2200, emissiveIntensity:0.4});
+
+  // Blade
+  var blade = new THREE.Mesh(new THREE.BoxGeometry(0.02,0.04,0.25), bladeMat);
+  blade.position.set(0,0,-0.12); g.add(blade);
+  // Blade tip (tapered)
+  var tip = new THREE.Mesh(new THREE.ConeGeometry(0.02,0.06,4), bladeMat);
+  tip.rotation.x=-Math.PI/2; tip.position.set(0,0,-0.27); g.add(tip);
+  // Guard
+  var guard = new THREE.Mesh(new THREE.BoxGeometry(0.06,0.015,0.02), handleMat);
+  guard.position.set(0,0,0.02); g.add(guard);
+  // Handle
+  var handle = new THREE.Mesh(new THREE.BoxGeometry(0.035,0.035,0.12), handleMat);
+  handle.position.set(0,0,0.1); g.add(handle);
+  // Handle wrap
+  var wrap = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.03), accentMat);
+  wrap.position.set(0,0,0.08); g.add(wrap);
+  var wrap2 = new THREE.Mesh(new THREE.BoxGeometry(0.04,0.04,0.03), accentMat);
+  wrap2.position.set(0,0,0.12); g.add(wrap2);
+  return g;
+}
+
+var weaponModels = {};
+
+function createAllWeaponModels() {
+  weaponModels.pistol = buildPistolModel();
+  weaponModels.shotgun = buildShotgunModel();
+  weaponModels.rifle = buildRifleModel();
+  weaponModels.sniper = buildSniperModel();
+  weaponModels.knife = buildKnifeModel();
+}
+
+function setWeaponModel(weaponKey) {
+  if (currentWeaponModel) {
+    weaponViewModel.remove(currentWeaponModel);
+  }
+  currentWeaponModel = weaponModels[weaponKey].clone();
+  weaponViewModel.add(currentWeaponModel);
+}
+
+(function createWeaponViewContainer(){
+  createAllWeaponModels();
   weaponViewModel = new THREE.Group();
-  var pistolModel = buildPistolModel();
-  weaponViewModel.add(pistolModel);
   weaponViewModel.position.set(0.35, -0.3, -0.6);
   weaponViewModel.rotation.set(0, 0.2, 0);
   camera.add(weaponViewModel);
@@ -704,6 +1127,9 @@ function updateZombies(playerPos) {
           z.userData.attackCooldown = 60;
           flashVignette();
           updateHUD();
+          if (playerHP <= 0) {
+            playerDeath();
+          }
         }
       }
     }
@@ -726,24 +1152,54 @@ function updateZombies(playerPos) {
 }
 
 // ════════════════════════════════════════════════
-// WEAPONS
+// WEAPONS WITH RECOIL
 // ════════════════════════════════════════════════
 var weaponDefs = {
-  pistol:  {name:'Пистолет',  icon:'🔫', bullets:1, speed:2.2, spread:0,    dmg:1, fireRate:500,  price:0,   owned:true},
-  shotgun: {name:'Дробовик',  icon:'💥', bullets:6, speed:1.8, spread:0.12, dmg:1, fireRate:900,  price:50,  owned:false},
-  rifle:   {name:'Автомат',   icon:'🔧', bullets:1, speed:3.0, spread:0.03, dmg:1, fireRate:130,  price:150, owned:false},
-  sniper:  {name:'Снайпер',   icon:'🎯', bullets:1, speed:4.5, spread:0,    dmg:3, fireRate:1500, price:300, owned:false}
+  knife:   {name:'Нож',       slot:1, bullets:0, speed:0,   spread:0,    dmg:2, fireRate:400,  price:0,   owned:true,  recoil:0},
+  pistol:  {name:'Пистолет',  slot:2, bullets:1, speed:2.2, spread:0,    dmg:1, fireRate:500,  price:0,   owned:true,  recoil:0.02},
+  shotgun: {name:'Дробовик',  slot:3, bullets:6, speed:1.8, spread:0.12, dmg:1, fireRate:900,  price:50,  owned:false, recoil:0.08},
+  rifle:   {name:'Автомат',   slot:4, bullets:1, speed:3.0, spread:0.03, dmg:1, fireRate:130,  price:150, owned:false, recoil:0.015},
+  sniper:  {name:'Снайпер',   slot:5, bullets:1, speed:4.5, spread:0,    dmg:3, fireRate:1500, price:300, owned:false, recoil:0.12}
 };
 var currentWeapon = 'pistol';
 var lastShot = 0;
 var bullets = [];
 var bulletMat = new THREE.MeshBasicMaterial({color:0xffee00});
+var recoilOffset = 0;
 
 function shoot() {
   if (currentVehicle) return;
   var w = weaponDefs[currentWeapon];
+  
+  // Knife attack (melee)
+  if (currentWeapon === 'knife') {
+    if (Date.now() - lastShot < w.fireRate) return;
+    lastShot = Date.now();
+    // Check for nearby zombies
+    for (var zi = 0; zi < zombies.length; zi++) {
+      var z = zombies[zi];
+      if (!z.userData.alive) continue;
+      var dist = player.position.distanceTo(z.position);
+      if (dist < 3.5) {
+        zombieHit(z, w.dmg);
+      }
+    }
+    // Knife swing animation
+    if (currentWeaponModel) {
+      currentWeaponModel.rotation.x = -0.5;
+      setTimeout(function(){ if(currentWeaponModel) currentWeaponModel.rotation.x = 0; }, 150);
+    }
+    return;
+  }
+  
   if (Date.now() - lastShot < w.fireRate) return;
   lastShot = Date.now();
+  
+  // Apply recoil
+  recoilOffset = w.recoil;
+  pitch += w.recoil * (0.5 + Math.random() * 0.5);
+  yaw += (Math.random() - 0.5) * w.recoil * 0.3;
+  
   for (var i = 0; i < w.bullets; i++) {
     var fx = Math.sin(yaw)*Math.cos(pitch);
     var fy = Math.sin(pitch);
@@ -795,6 +1251,69 @@ function updateBullets() {
 }
 
 // ════════════════════════════════════════════════
+// INVENTORY BAR
+// ════════════════════════════════════════════════
+function renderInventoryBar() {
+  var bar = document.getElementById('inventory-bar');
+  bar.innerHTML = '';
+  
+  var weaponKeys = ['knife', 'pistol', 'shotgun', 'rifle', 'sniper'];
+  var keyLabels = ['Q', '1', '2', '3', '4'];
+  
+  weaponKeys.forEach(function(wKey, idx){
+    var w = weaponDefs[wKey];
+    var slot = document.createElement('div');
+    slot.className = 'inv-slot' + (currentWeapon === wKey ? ' active' : '') + (!w.owned ? ' locked' : '');
+    slot.innerHTML = '<span class="slot-key">' + keyLabels[idx] + '</span>';
+    
+    // Create mini canvas for weapon preview
+    var canvas = document.createElement('canvas');
+    canvas.width = 88; canvas.height = 88;
+    var ctx = canvas.getContext('2d');
+    
+    // Draw weapon icon
+    ctx.fillStyle = w.owned ? '#fff' : '#444';
+    ctx.font = 'bold 11px Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText(w.name, 44, 75);
+    
+    // Simple weapon shape
+    ctx.fillStyle = w.owned ? (currentWeapon === wKey ? '#ffcc00' : '#aaa') : '#333';
+    if (wKey === 'knife') {
+      ctx.fillRect(40, 20, 8, 40);
+      ctx.fillRect(34, 55, 20, 8);
+    } else if (wKey === 'pistol') {
+      ctx.fillRect(35, 25, 18, 12);
+      ctx.fillRect(40, 37, 8, 20);
+    } else if (wKey === 'shotgun') {
+      ctx.fillRect(20, 30, 48, 10);
+      ctx.fillRect(55, 40, 8, 18);
+    } else if (wKey === 'rifle') {
+      ctx.fillRect(15, 32, 55, 8);
+      ctx.fillRect(52, 40, 6, 16);
+      ctx.fillRect(60, 28, 8, 16);
+    } else if (wKey === 'sniper') {
+      ctx.fillRect(10, 35, 65, 6);
+      ctx.fillRect(55, 41, 6, 14);
+      ctx.fillRect(30, 25, 20, 8);
+    }
+    
+    slot.appendChild(canvas);
+    
+    if (w.owned) {
+      slot.addEventListener('click', function(){
+        currentWeapon = wKey;
+        setWeaponModel(wKey);
+        updateHUD();
+        renderInventoryBar();
+      });
+    }
+    
+    bar.appendChild(slot);
+  });
+}
+
+// ════════════════════════════════════════════════
 // SHOP UI
 // ════════════════════════════════════════════════
 var shopOpen = false;
@@ -814,6 +1333,7 @@ function renderShopUI() {
   var list = document.getElementById('shop-items-list');
   list.innerHTML = '';
   Object.keys(weaponDefs).forEach(function(key){
+    if (key === 'knife') return; // Knife is free and always owned
     var w = weaponDefs[key];
     var isOwned = w.owned;
     var canAfford = coins >= w.price;
@@ -821,9 +1341,9 @@ function renderShopUI() {
     div.className = 's-item';
     div.innerHTML =
       '<div class="s-item-left">'
-        +'<span class="s-ico">'+w.icon+'</span>'
+        +'<span class="s-ico">🔫</span>'
         +'<div><div class="s-name">'+w.name+'</div>'
-        +'<div class="s-desc">Пуль: '+w.bullets+' | Скорость: '+w.speed+' | Урон: '+w.dmg+'</div></div>'
+        +'<div class="s-desc">Пуль: '+w.bullets+' | Урон: '+w.dmg+' | Отдача: '+(w.recoil*100).toFixed(0)+'%</div></div>'
       +'</div>'
       +'<button class="s-btn'+(isOwned?' owned':'')+((!isOwned&&!canAfford)?' disabled':'')+'" data-key="'+key+'" '+(isOwned||(!isOwned&&!canAfford)?'disabled':'')+'>'+
         (isOwned ? (currentWeapon===key?'Выбрано':'Выбрать') : (w.price===0?'Бесплатно':'💰 '+w.price))
@@ -836,16 +1356,20 @@ function renderShopUI() {
       var w = weaponDefs[key];
       if (w.owned) {
         currentWeapon = key;
+        setWeaponModel(key);
         updateHUD();
         renderShopUI();
+        renderInventoryBar();
         return;
       }
       if (coins < w.price) return;
       coins -= w.price;
       w.owned = true;
       currentWeapon = key;
+      setWeaponModel(key);
       updateHUD();
       renderShopUI();
+      renderInventoryBar();
     });
   });
 }
@@ -854,11 +1378,7 @@ document.getElementById('shop-close-btn').addEventListener('click', closeShop);
 // ════════════════════════════════════════════════
 // VEHICLES
 // ════════════════════════════════════════════════
-var vehicles = [
-  createCar(0xff2200,  20, 20),
-  createCar(0x1133ff, -20, 10),
-  createBus(0, -40)
-];
+var vehicles = [];
 var currentVehicle = null;
 
 // ════════════════════════════════════════════════
@@ -868,14 +1388,39 @@ var player = new THREE.Object3D();
 player.position.set(0, 2, 30);
 scene.add(player);
 
+// Jump physics
+var playerVelY = 0;
+var isGrounded = true;
+var GRAVITY = 0.015;
+var JUMP_FORCE = 0.35;
+
 var keys = {};
 document.addEventListener('keydown', function(e){
+  if (!gameStarted) return;
   keys[e.code]=true;
 
-  // Key 1 - toggle weapon model
-  if (e.code === 'Digit1') {
-    weaponVisible = !weaponVisible;
-    if (weaponViewModel) weaponViewModel.visible = weaponVisible;
+  // Key 1-4 - select weapon by slot
+  if (e.code === 'Digit1') { selectWeaponBySlot(2); }
+  if (e.code === 'Digit2') { selectWeaponBySlot(3); }
+  if (e.code === 'Digit3') { selectWeaponBySlot(4); }
+  if (e.code === 'Digit4') { selectWeaponBySlot(5); }
+  
+  // Q - knife
+  if (e.code === 'KeyQ') { selectWeaponBySlot(1); }
+
+  // V - toggle headlights
+  if (e.code === 'KeyV' && currentVehicle) {
+    currentVehicle.userData.lightsOn = !currentVehicle.userData.lightsOn;
+    var intensity = currentVehicle.userData.lightsOn ? 3 : 0;
+    currentVehicle.userData.headlights.forEach(function(hl){
+      hl.intensity = intensity;
+    });
+  }
+
+  // Space - jump (when not in vehicle)
+  if (e.code === 'Space' && !currentVehicle && isGrounded && !shopOpen) {
+    playerVelY = JUMP_FORCE;
+    isGrounded = false;
   }
 
   // F key - enter/exit vehicle
@@ -908,22 +1453,34 @@ document.addEventListener('keydown', function(e){
 });
 document.addEventListener('keyup', function(e){ keys[e.code]=false; });
 
+function selectWeaponBySlot(slot) {
+  Object.keys(weaponDefs).forEach(function(key){
+    var w = weaponDefs[key];
+    if (w.slot === slot && w.owned) {
+      currentWeapon = key;
+      setWeaponModel(key);
+      updateHUD();
+      renderInventoryBar();
+    }
+  });
+}
+
 // Mouse look
 var yaw = 0, pitch = 0;
 document.addEventListener('mousemove', function(e){
-  if (!document.pointerLockElement) return;
+  if (!document.pointerLockElement || !gameStarted) return;
   yaw   -= e.movementX * 0.002;
   pitch -= e.movementY * 0.002;
   pitch  = Math.max(-1.3, Math.min(1.3, pitch));
 });
 renderer.domElement.addEventListener('click', function(){
-  if (!shopOpen) renderer.domElement.requestPointerLock();
+  if (!shopOpen && gameStarted) renderer.domElement.requestPointerLock();
 });
 
 // Shoot
 var shootHeld = false;
 document.addEventListener('mousedown', function(e){
-  if (e.button===0 && document.pointerLockElement && !shopOpen) shootHeld=true;
+  if (e.button===0 && document.pointerLockElement && !shopOpen && gameStarted) shootHeld=true;
 });
 document.addEventListener('mouseup', function(){ shootHeld=false; });
 
@@ -948,7 +1505,6 @@ function updateVehicle(v) {
     else v.userData.speed = Math.max(v.userData.speed - accel*0.6, -maxRaw*0.35);
   }
 
-  // Steering: A=left (yaw--), D=right (yaw++)
   var turn = maxTurn * Math.min(v.userData.speed/0.25, 1);
   if (keys['KeyA']) v.userData.yaw += turn;
   if (keys['KeyD']) v.userData.yaw -= turn;
@@ -1025,7 +1581,7 @@ function vehicleCamera(v) {
 // ════════════════════════════════════════════════
 // DAY/NIGHT CYCLE
 // ════════════════════════════════════════════════
-var DAY_LENGTH = 240; // seconds for full cycle
+var DAY_LENGTH = 240;
 var gameClock = 0;
 var lastFrameTime = performance.now();
 
@@ -1177,7 +1733,6 @@ function drawMap() {
   mCtx.fillRect(MOFF-rv/2, 4, rv, MW-8);
   mCtx.fillRect(4, MOFF-rv/2, MW-8, rv);
 
-  // Mountains on map
   mCtx.fillStyle='rgba(100,120,100,.5)';
   mountainPositions.forEach(function(mp){
     mCtx.beginPath();
@@ -1185,14 +1740,12 @@ function drawMap() {
     mCtx.fill();
   });
 
-  // Shop
   var sx=SHOP_POS.x*MSCALE+MOFF, sz=SHOP_POS.z*MSCALE+MOFF;
   mCtx.fillStyle='#ffcc44';
   mCtx.fillRect(sx-5,sz-5,10,10);
   mCtx.fillStyle='#fff'; mCtx.font='8px Segoe UI'; mCtx.textAlign='center';
   mCtx.fillText('SHOP', sx, sz-7);
 
-  // Trees
   mCtx.fillStyle='rgba(50,160,50,.4)';
   for (var i=0;i<trees.length;i++) {
     mCtx.beginPath();
@@ -1200,7 +1753,6 @@ function drawMap() {
     mCtx.fill();
   }
 
-  // Zombies
   for (var zi=0;zi<zombies.length;zi++) {
     mCtx.fillStyle = zombies[zi].userData.isBoss ? '#ff4444' : '#44ff44';
     mCtx.beginPath();
@@ -1208,7 +1760,6 @@ function drawMap() {
     mCtx.fill();
   }
 
-  // Player
   if (!currentVehicle) {
     mCtx.fillStyle='#fff';
     mCtx.beginPath();
@@ -1216,7 +1767,6 @@ function drawMap() {
     mCtx.fill();
   }
 
-  // Vehicles
   var vColors=['#ff4400','#2255ff','#ffcc00'];
   for (var vi=0;vi<vehicles.length;vi++) {
     var v=vehicles[vi];
@@ -1239,6 +1789,7 @@ function drawMap() {
 // ════════════════════════════════════════════════
 var coins = 0;
 var playerHP = 100;
+var isDead = false;
 
 function updateHUD() {
   document.getElementById('hp-bar').style.width = playerHP+'%';
@@ -1246,7 +1797,7 @@ function updateHUD() {
     playerHP>50?'#22ee55':playerHP>25?'#ffaa00':'#ff2222';
   document.getElementById('coins-hud').textContent = '\uD83D\uDCB0 '+coins;
   var w = weaponDefs[currentWeapon];
-  document.getElementById('weapon-hud').textContent = w.icon+' '+w.name;
+  document.getElementById('weapon-hud').textContent = w.name;
   document.getElementById('wave-num').textContent = wave;
   document.getElementById('zombie-num').textContent = zombies.length;
   document.getElementById('kill-num').textContent = totalKills;
@@ -1271,109 +1822,156 @@ function addKillFeed(txt) {
   setTimeout(function(){ if(line.parentNode) kf.removeChild(line); }, 3000);
 }
 
+function playerDeath() {
+  if (isDead) return;
+  isDead = true;
+  document.getElementById('death-kills').textContent = totalKills;
+  document.getElementById('death-screen').classList.add('open');
+  document.exitPointerLock();
+}
+
+function respawnPlayer() {
+  isDead = false;
+  playerHP = 100;
+  player.position.set(0, 2, 30);
+  playerVelY = 0;
+  isGrounded = true;
+  updateHUD();
+}
+
+function resetGame() {
+  // Clear zombies
+  for (var i = zombies.length-1; i >= 0; i--) {
+    scene.remove(zombies[i]);
+  }
+  zombies = [];
+  
+  // Reset player
+  playerHP = 100;
+  coins = 0;
+  wave = 1;
+  totalKills = 0;
+  killedBosses = 0;
+  isDead = false;
+  player.position.set(0, 2, 30);
+  playerVelY = 0;
+  isGrounded = true;
+  currentWeapon = 'pistol';
+  
+  // Reset weapons
+  Object.keys(weaponDefs).forEach(function(key){
+    if (key !== 'knife' && key !== 'pistol') {
+      weaponDefs[key].owned = false;
+    }
+  });
+  
+  updateHUD();
+  renderInventoryBar();
+}
+
 // ════════════════════════════════════════════════
 // MULTIPLAYER (Supabase Realtime)
 // ════════════════════════════════════════════════
 var otherPlayers = {};
 var myPlayerId = Math.random().toString(36).substr(2, 9);
 
-try {
-  var supabaseUrl = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
-  var supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
+function initMultiplayer() {
+  try {
+    var supabaseUrl = 'https://demo.supabase.co';
+    var supabaseKey = 'demo-key';
 
-  var script = document.createElement('script');
-  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  script.onload = function() {
-    try {
-      var sb = window.supabase.createClient(supabaseUrl, supabaseKey);
-      var channel = sb.channel('game-world', { config: { broadcast: { self: false } } });
+    var script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = function() {
+      try {
+        var sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+        var channelName = hostNickname ? 'game-' + hostNickname : 'game-' + playerNickname;
+        var channel = sb.channel(channelName, { config: { broadcast: { self: false } } });
 
-      channel.on('broadcast', { event: 'player-move' }, function(payload) {
-        try {
-          var data = payload.payload;
-          if (data.id === myPlayerId) return;
-          if (!otherPlayers[data.id]) {
-            var g = new THREE.Group();
-            var vm = function(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.7});};
-            var legs = new THREE.Mesh(new THREE.BoxGeometry(0.8,1,0.6),vm(0x2244aa));
-            legs.position.set(0,0.5,0); legs.castShadow=true; g.add(legs);
-            var torso = new THREE.Mesh(new THREE.BoxGeometry(1,1.2,0.6),vm(0x33aaff));
-            torso.position.set(0,1.6,0); torso.castShadow=true; g.add(torso);
-            var head = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.7),vm(0xffcc99));
-            head.position.set(0,2.6,0); head.castShadow=true; g.add(head);
-            scene.add(g);
-            otherPlayers[data.id] = { mesh: g, lastUpdate: Date.now() };
-          }
-          var op = otherPlayers[data.id];
-          op.mesh.position.set(data.x, data.y, data.z);
-          op.mesh.rotation.y = data.rot || 0;
-          op.lastUpdate = Date.now();
-        } catch(ex2) { console.warn('MP event error:', ex2); }
-      });
-
-      channel.on('broadcast', { event: 'player-leave' }, function(payload) {
-        try {
-          var data = payload.payload;
-          if (otherPlayers[data.id]) {
-            scene.remove(otherPlayers[data.id].mesh);
-            delete otherPlayers[data.id];
-          }
-        } catch(ex3) { console.warn('MP leave error:', ex3); }
-      });
-
-      channel.subscribe();
-
-      setInterval(function(){
-        try {
-          channel.send({
-            type: 'broadcast',
-            event: 'player-move',
-            payload: { id: myPlayerId, x: player.position.x, y: player.position.y, z: player.position.z, rot: yaw }
-          });
-        } catch(ex4) {}
-      }, 100);
-
-      setInterval(function(){
-        try {
-          var now = Date.now();
-          Object.keys(otherPlayers).forEach(function(id){
-            if(now - otherPlayers[id].lastUpdate > 10000){
-              scene.remove(otherPlayers[id].mesh);
-              delete otherPlayers[id];
+        channel.on('broadcast', { event: 'player-move' }, function(payload) {
+          try {
+            var data = payload.payload;
+            if (data.id === myPlayerId) return;
+            if (!otherPlayers[data.id]) {
+              var g = new THREE.Group();
+              var vm = function(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.7});};
+              var legs = new THREE.Mesh(new THREE.BoxGeometry(0.8,1,0.6),vm(0x2244aa));
+              legs.position.set(0,0.5,0); legs.castShadow=true; g.add(legs);
+              var torso = new THREE.Mesh(new THREE.BoxGeometry(1,1.2,0.6),vm(0x33aaff));
+              torso.position.set(0,1.6,0); torso.castShadow=true; g.add(torso);
+              var head = new THREE.Mesh(new THREE.BoxGeometry(0.7,0.7,0.7),vm(0xffcc99));
+              head.position.set(0,2.6,0); head.castShadow=true; g.add(head);
+              scene.add(g);
+              otherPlayers[data.id] = { mesh: g, lastUpdate: Date.now(), nick: data.nick };
             }
-          });
-        } catch(ex5) {}
-      }, 5000);
-    } catch(e1) { console.warn('MP init error:', e1); }
-  };
-  script.onerror = function() { console.warn('Supabase SDK failed to load'); };
-  document.head.appendChild(script);
-} catch(e) { console.warn('Multiplayer failed:', e); }
+            var op = otherPlayers[data.id];
+            op.mesh.position.set(data.x, data.y, data.z);
+            op.mesh.rotation.y = data.rot || 0;
+            op.lastUpdate = Date.now();
+          } catch(ex2) { console.warn('MP event error:', ex2); }
+        });
+
+        channel.on('broadcast', { event: 'player-leave' }, function(payload) {
+          try {
+            var data = payload.payload;
+            if (otherPlayers[data.id]) {
+              scene.remove(otherPlayers[data.id].mesh);
+              delete otherPlayers[data.id];
+            }
+          } catch(ex3) { console.warn('MP leave error:', ex3); }
+        });
+
+        channel.subscribe();
+
+        setInterval(function(){
+          try {
+            channel.send({
+              type: 'broadcast',
+              event: 'player-move',
+              payload: { id: myPlayerId, nick: playerNickname, x: player.position.x, y: player.position.y, z: player.position.z, rot: yaw }
+            });
+          } catch(ex4) {}
+        }, 100);
+
+        setInterval(function(){
+          try {
+            var now = Date.now();
+            Object.keys(otherPlayers).forEach(function(id){
+              if(now - otherPlayers[id].lastUpdate > 10000){
+                scene.remove(otherPlayers[id].mesh);
+                delete otherPlayers[id];
+              }
+            });
+          } catch(ex5) {}
+        }, 5000);
+      } catch(e1) { console.warn('MP init error:', e1); }
+    };
+    script.onerror = function() { console.warn('Supabase SDK failed to load'); };
+    document.head.appendChild(script);
+  } catch(e) { console.warn('Multiplayer failed:', e); }
+}
 
 // ════════════════════════════════════════════════
 // MAIN UPDATE
 // ════════════════════════════════════════════════
 function update() {
+  if (!gameStarted) return;
+  
   var now = performance.now();
   var deltaMs = now - lastFrameTime;
   lastFrameTime = now;
   var deltaSec = deltaMs / 1000;
 
-  if (shopOpen) return;
+  if (shopOpen || isDead) return;
 
-  // Game clock (1 real sec = 10 game sec)
   gameClock += deltaSec * 10;
-
-  // Day/Night
   updateDayNight();
 
-  // Shoot
   if (shootHeld && !currentVehicle && document.pointerLockElement) shoot();
 
-  // Vehicle
   if (currentVehicle) updateVehicle(currentVehicle);
 
-  // FPS walking — FIXED strafe direction
+  // FPS walking with jump
   if (!currentVehicle) {
     var dx=0, dz=0;
     if (keys['KeyW']) dz+=1;
@@ -1383,8 +1981,6 @@ function update() {
     var len2 = Math.sqrt(dx*dx+dz*dz);
     if (len2>0) { dx/=len2; dz/=len2; }
 
-    // Forward: (sin(yaw), 0, cos(yaw))
-    // Right strafe: (cos(yaw), 0, -sin(yaw))
     var fwdX = -Math.sin(yaw);
     var fwdZ = -Math.cos(yaw);
     var rgtX = Math.cos(yaw);
@@ -1392,32 +1988,43 @@ function update() {
 
     player.position.x += (fwdX*dz + rgtX*dx) * 0.13;
     player.position.z += (fwdZ*dz + rgtZ*dx) * 0.13;
+    
+    // Jump physics
+    playerVelY -= GRAVITY;
+    player.position.y += playerVelY;
+    
+    if (player.position.y <= 2) {
+      player.position.y = 2;
+      playerVelY = 0;
+      isGrounded = true;
+    }
+    
     player.position.x = Math.max(-395, Math.min(395, player.position.x));
     player.position.z = Math.max(-395, Math.min(395, player.position.z));
   } else {
     player.position.copy(currentVehicle.position);
+    player.position.y = 2;
   }
 
-  // Zombies
+  // Recoil recovery
+  if (recoilOffset > 0) {
+    recoilOffset *= 0.9;
+    if (currentWeaponModel) {
+      currentWeaponModel.position.z = -recoilOffset * 2;
+    }
+  }
+
   updateZombies(player.position);
-
-  // Bullets
   updateBullets();
-
-  // Debris
   updateDebris();
-
-  // Waves
   updateWaves(deltaSec);
 
-  // Speedometer
   if (currentVehicle) {
     var rawSpd = currentVehicle.userData.vel.length();
     var mxRaw  = currentVehicle.userData.type==='bus' ? 0.65 : 0.95;
     drawSpeedometer(rawSpd * (currentVehicle.userData.maxSpeedKmh/mxRaw), currentVehicle.userData.maxSpeedKmh);
   }
 
-  // Drift flash
   var driftEl = document.getElementById('drift-flash');
   if (driftTimer > 0) {
     driftTimer--;
@@ -1426,33 +2033,50 @@ function update() {
     driftEl.style.opacity='0';
   }
 
-  // Map
   if (mapOpen) drawMap();
 
-  // Shop proximity
   var shopDist = player.position.distanceTo(SHOP_POS);
   document.getElementById('shop-prompt').style.display =
     (!currentVehicle && shopDist < 12) ? 'block' : 'none';
 
-  // Camera
   if (!currentVehicle) fpsCamera(); else vehicleCamera(currentVehicle);
 
-  // HP regen
   if (playerHP < 100 && zombies.length === 0) {
     playerHP = Math.min(100, playerHP + 0.02);
   }
 }
 
 // ════════════════════════════════════════════════
-// WORLD POPULATION
+// GAME INITIALIZATION
 // ════════════════════════════════════════════════
-for (var wi=0; wi<150; wi++) {
-  var tx=(Math.random()-0.5)*700, tz=(Math.random()-0.5)*700;
-  if (Math.abs(tx)>14 || Math.abs(tz)>14) addTree(tx, tz);
+function initGame() {
+  // Create vehicles
+  vehicles = [
+    createCar(0xff2200,  20, 20),
+    createCar(0x1133ff, -20, 10),
+    createBus(0, -40)
+  ];
+  
+  // Create trees
+  for (var wi=0; wi<150; wi++) {
+    var tx=(Math.random()-0.5)*700, tz=(Math.random()-0.5)*700;
+    if (Math.abs(tx)>14 || Math.abs(tz)>14) addTree(tx, tz);
+  }
+  
+  // Spawn initial zombies
+  spawnZombies(20);
+  
+  // Set initial weapon model
+  setWeaponModel('pistol');
+  
+  // Update UI
+  updateHUD();
+  renderInventoryBar();
+  document.getElementById('crosshair').style.display='block';
+  
+  // Init multiplayer
+  initMultiplayer();
 }
-spawnZombies(20);
-updateHUD();
-document.getElementById('crosshair').style.display='block';
 
 // ════════════════════════════════════════════════
 // RENDER LOOP
