@@ -986,6 +986,31 @@ function createBMW(bodyColor,x,z){
     type:'bmw',maxSpeedKmh:120,bodyColor:bodyColor,damageLevel:0};
   addHeadlights(g,[[-1.6,1.4,4.68],[1.6,1.4,4.68]]);
   scene.add(g); return g;
+   // HEADLIGHTS (SpotLight)
+  var headlightL = new THREE.SpotLight(0xffffee, 0, 60, Math.PI/5, 0.3, 1);
+  headlightL.position.set(-1.5, 1.5, 5);
+  headlightL.target.position.set(-1.5, 0, 20);
+  g.add(headlightL);
+  g.add(headlightL.target);
+
+  var headlightR = new THREE.SpotLight(0xffffee, 0, 60, Math.PI/5, 0.3, 1);
+  headlightR.position.set(1.5, 1.5, 5);
+  headlightR.target.position.set(1.5, 0, 20);
+  g.add(headlightR);
+  g.add(headlightR.target);
+
+  g.position.set(x, 0, z);
+  g.castShadow = true;
+  g.userData = { 
+    speed:0, yaw:0, vel:new THREE.Vector3(), wheels:wheels, type:'car', 
+    maxSpeedKmh:120, bodyColor:bodyColor, damageLevel:0,
+    headlights: [headlightL, headlightR],
+    lightsOn: false,
+    colliderRadius: 5
+  };
+  scene.add(g);
+  return g;
+}
 
 
 
@@ -1093,6 +1118,7 @@ function createLamborghini(bodyColor,x,z){
   addHeadlights(g,[[-1.8,0.95,5.2],[1.8,0.95,5.2]]);
   scene.add(g); return g;
 }
+  
 
 
 // ════════════════════════════════════════════════
