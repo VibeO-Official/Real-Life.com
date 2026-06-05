@@ -1336,8 +1336,8 @@ document.getElementById('help-close-btn').addEventListener('click',function(){
 var yaw=0, pitch=0;
 document.addEventListener('mousemove',function(e){
   if(!document.pointerLockElement) return;
-  yaw+=e.movementX*0.002;
-  pitch-=e.movementY*0.002;
+  yaw-=e.movementX*0.002;
+  pitch+=e.movementY*0.002;
   pitch=Math.max(-1.3,Math.min(1.3,pitch));
 });
 renderer.domElement.addEventListener('click',function(){
@@ -1661,6 +1661,10 @@ function update(){
 for(var wi=0;wi<180;wi++){
   var tx=(Math.random()-.5)*720,tz=(Math.random()-.5)*720;
   if(Math.abs(tx)>15||Math.abs(tz)>15) addTree(tx,tz);
+}
+for(var wi=0;wi<180;wi++){
+  var tx=(Math.random()-.5)*720,tz=(Math.random()-.5)*720;
+  if(Math.abs(tx)>15||Math.abs(tz)>15) addRock(tx,tz);
 }
 spawnZombies(20);
 setInterval(function(){if(zombies.length<5)spawnZombies(8);},15000);
