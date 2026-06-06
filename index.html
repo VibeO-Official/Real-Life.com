@@ -2115,7 +2115,19 @@ function killZombie(z) {
   spawnDebris(z.position.clone().add(new THREE.Vector3(0,1.5,0)), 0x556644, 12);
   spawnDebris(z.position.clone().add(new THREE.Vector3(0,0.5,0)), 0x660022, 8);
   spawnBlood(z.position.clone().add(new THREE.Vector3(0,1,0)));
+  function killZombie(z) {
+  z.userData.alive=false;
+  scene.remove(z);
+  const idx=zombies.indexOf(z); if (idx!==-1) zombies.splice(idx,1);
+  // Не добавляем деньги
+  addKillFeed(z.userData.isBoss ? 'БОСС убит! +100' : 'Зомби убит!');
+}
   // Chance to drop ammo
+  if (z.userData.burnTimer>2) {
+  // Просто умирает, деньги не засчитываются
+  scene.remove(z);
+  const idx=zombies.indexOf(z); if (idx!==-1) zombies.splice(idx,1);
+}
   if (Math.random() < 0.3) spawnAmmoDrop(z.position.clone());
   scene.remove(z);
   var idx = zombies.indexOf(z);
@@ -2760,6 +2772,16 @@ document.addEventListener('mouseup', function(e){
   if (e.button===0) shootHeld=false;
 });
 document.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+ // Обработчик для R, чтобы восстановить HP
+document.addEventListener('keydown', function(e) {
+  if (e.code==='KeyR' && craftOpen) {
+    if (playerHP<100) {
+      playerHP=Math.min(100,playerHP+20);
+      addKillFeed('HP восстановлено');
+      updateHUD();
+    }
+  }
+});
  
 // ══════════════════════════════════════════════════
 // VEHICLE PHYSICS (original)
@@ -2917,6 +2939,21 @@ function updateDayNight() {
     document.getElementById('clock-time').style.color='#fff';
     document.getElementById('clock-label').textContent='ДЕНЬ';
     document.getElementById('clock-label').style.color='#aaa';
+  }
+}
+  // В конце buildShop()
+  var shopSignLight = new THREE.PointLight(0xffcc44, 0, 10);
+shopSignLight.position.set(0,8.5,0);
+g.add(shopSignLight);
+
+// Обновление света в функции updateDayNight()
+function updateShopSignLight() {
+  const hour=getGameHour(gameClock);
+  const brightness=getSkyBrightness(getTimeOfDay(gameClock));
+  if (brightness<0.2) { // ночь
+    shopSignLight.intensity=1.5;
+  } else {
+    shopSignLight.intensity=0;
   }
 }
  
